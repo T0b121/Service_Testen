@@ -1,0 +1,236 @@
+services:
+  traefik:
+    image: traefik:${TRAEFIK_VERSION}
+    container_name: core-traefik
+    restart: unless-stopped
+
+    command:
+      - --api.dashboard=true
+      - --api.insecure=false
+
+      - --providers.docker=true
+      - --providers.docker.exposedbydefault=false
+      - --providers.docker.network=web
+
+      - --entrypoints.web.address=:80
+      - --entrypoints.web.http.redirections.entrypoint.to=websecure
+      - --entrypoints.web.http.redirections.entrypoint.scheme=https
+      - --entrypoints.web.http.redirections.entrypoint.permanent=true
+
+      - --entrypoints.websecure.address=:443
+
+      # Interner EntryPoint für den Docker-Healthcheck
+      - --entrypoints.ping.address=:8082
+      - --ping=true
+      - --ping.entrypoint=ping
+
+      # ACME-Konfiguration
+      - --certificatesresolvers.letsencrypt.acme.email=${ACME_EMAIL}
+      - --certificatesresolvers.letsencrypt.acme.storage=/acme/acme.json
+      - --certificatesresolvers.letsencrypt.acme.httpchallenge=true
+      - --certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web
+      - --certificatesresolvers.letsencrypt.acme.caserver=${ACME_CA_SERVER}
+
+      - --accesslog=true
+      - --log.level=INFO
+
+    ports:
+      - "80:80"
+      - "443:443"
+
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - traefik_acme:/acme
+
+    networks:
+      - web
+
+    healthcheck:
+      test:
+        - CMD
+        - traefik
+        - healthcheck
+        - --ping=true
+        - --ping.entrypoint=ping
+        - --entrypoints.ping.address=:8082
+      start_period: 10s
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=web
+
+      - traefik.http.routers.traefik-dashboard.rule=Host(`proxy.${DOMAIN}`) && (PathPrefix(`/api`) || PathPrefix(`/dashboard`))
+      - traefik.http.routers.traefik-dashboard.entrypoints=websecure
+      - traefik.http.routers.traefik-dashboard.tls=true
+      - traefik.http.routers.traefik-dashboard.tls.certresolver=letsencrypt
+      - traefik.http.routers.traefik-dashboard.service=api@internal
+      - traefik.http.routers.traefik-dashboard.middlewares=authentik
+
+      - traefik.http.middlewares.authentik.forwardauth.address=http://authentik-server:9000/outpost.goauthentik.io/auth/traefik
+      - traefik.http.middlewares.authentik.forwardauth.maxResponseBodySize=1048576
+      - traefik.http.middlewares.authentik.forwardauth.trustForwardHeader=true
+      - traefik.http.middlewares.authentik.forwardauth.authResponseHeaders=X-authentik-username,X-authentik-groups,X-authentik-entitlements,X-authentik-email,X-authentik-name,X-authentik-uid,X-authentik-jwt,X-authentik-meta-jwks,X-authentik-meta-outpost,X-authentik-meta-provider,X-authentik-meta-app,X-authentik-meta-version
+
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
+
+  postgresql:
+    image: postgres:${POSTGRES_VERSION}
+    container_name: core-postgresql
+    restart: unless-stopped
+
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgresql_password
+
+    secrets:
+      - postgresql_password
+
+    volumes:
+      - postgresql_data:/var/lib/postgresql
+
+    networks:
+      - core_auth
+
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - pg_isready -d "$${POSTGRES_DB}" -U "$${POSTGRES_USER}"
+      start_period: 30s
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
+
+
+  authentik-server:
+    image: ghcr.io/goauthentik/server:${AUTHENTIK_VERSION}
+    container_name: core-authentik-server
+    restart: unless-stopped
+    command: server
+
+    environment:
+      AUTHENTIK_POSTGRESQL__HOST: postgresql
+      AUTHENTIK_POSTGRESQL__NAME: ${POSTGRES_DB}
+      AUTHENTIK_POSTGRESQL__USER: ${POSTGRES_USER}
+      AUTHENTIK_POSTGRESQL__PASSWORD: file:///run/secrets/postgresql_password
+      AUTHENTIK_SECRET_KEY: file:///run/secrets/authentik_secret_key
+      AUTHENTIK_ERROR_REPORTING__ENABLED: "false"
+
+    secrets:
+      - postgresql_password
+      - authentik_secret_key
+
+    volumes:
+      - authentik_data:/data
+
+    expose:
+      - "9000"
+    
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=web
+
+      - traefik.http.routers.authentik.rule=Host(`auth.${DOMAIN}`)
+      - traefik.http.routers.authentik.entrypoints=websecure
+      - traefik.http.routers.authentik.tls=true
+      - traefik.http.routers.authentik.tls.certresolver=letsencrypt
+
+      - traefik.http.services.authentik.loadbalancer.server.port=9000
+
+      - traefik.http.routers.authentik-outpost.rule=Host(`proxy.${DOMAIN}`) && PathPrefix(`/outpost.goauthentik.io/`)
+      - traefik.http.routers.authentik-outpost.entrypoints=websecure
+      - traefik.http.routers.authentik-outpost.tls=true
+      - traefik.http.routers.authentik-outpost.tls.certresolver=letsencrypt
+      - traefik.http.routers.authentik-outpost.service=authentik
+      - traefik.http.routers.authentik-outpost.priority=100
+
+    networks:
+      - web
+      - core_auth
+
+    depends_on:
+      postgresql:
+        condition: service_healthy
+
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
+
+
+  authentik-worker:
+    image: ghcr.io/goauthentik/server:${AUTHENTIK_VERSION}
+    container_name: core-authentik-worker
+    restart: unless-stopped
+    command: worker
+
+    environment:
+      AUTHENTIK_POSTGRESQL__HOST: postgresql
+      AUTHENTIK_POSTGRESQL__NAME: ${POSTGRES_DB}
+      AUTHENTIK_POSTGRESQL__USER: ${POSTGRES_USER}
+      AUTHENTIK_POSTGRESQL__PASSWORD: file:///run/secrets/postgresql_password
+      AUTHENTIK_SECRET_KEY: file:///run/secrets/authentik_secret_key
+      AUTHENTIK_ERROR_REPORTING__ENABLED: "false"
+
+    secrets:
+      - postgresql_password
+      - authentik_secret_key
+
+    volumes:
+      - authentik_data:/data
+
+    networks:
+      - core_auth
+
+    depends_on:
+      postgresql:
+        condition: service_healthy
+
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
+
+
+networks:
+  web:
+    external: true
+    name: web
+
+  core_auth:
+    name: core_auth
+    internal: true
+
+
+volumes:
+  postgresql_data:
+    name: core_postgresql_data
+
+  authentik_data:
+    name: core_authentik_data
+
+  traefik_acme:
+    name: ${TRAEFIK_ACME_VOLUME}
+
+
+secrets:
+  postgresql_password:
+    file: ./secrets/postgresql_password
+
+  authentik_secret_key:
+    file: ./secrets/authentik_secret_key

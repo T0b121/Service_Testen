@@ -1,0 +1,13 @@
+# Umgebungsdateien
+.env
+**/.env
+
+# Secrets
+secrets/
+**/secrets/
+
+# Logs
+*.log
+
+# Traefik ACME-Dateien
+acme*.json
