@@ -150,12 +150,21 @@ services:
 
       - traefik.http.services.authentik.loadbalancer.server.port=9000
 
+      # Outpost für Traefik-Dashboard
       - traefik.http.routers.authentik-outpost.rule=Host(`proxy.${DOMAIN}`) && PathPrefix(`/outpost.goauthentik.io/`)
       - traefik.http.routers.authentik-outpost.entrypoints=websecure
       - traefik.http.routers.authentik-outpost.tls=true
       - traefik.http.routers.authentik-outpost.tls.certresolver=letsencrypt
       - traefik.http.routers.authentik-outpost.service=authentik
       - traefik.http.routers.authentik-outpost.priority=100
+
+      # Authentik-Outpost für Part-DB
+      - traefik.http.routers.authentik-outpost-partdb.rule=Host(`partdb.${DOMAIN}`) && PathPrefix(`/outpost.goauthentik.io/`)
+      - traefik.http.routers.authentik-outpost-partdb.entrypoints=websecure
+      - traefik.http.routers.authentik-outpost-partdb.tls=true
+      - traefik.http.routers.authentik-outpost-partdb.tls.certresolver=letsencrypt
+      - traefik.http.routers.authentik-outpost-partdb.service=authentik
+      - traefik.http.routers.authentik-outpost-partdb.priority=100
 
     networks:
       - web

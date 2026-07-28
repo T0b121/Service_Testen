@@ -1,0 +1,148 @@
+services:
+  partdb:
+    image: jbtronics/part-db1:${PARTDB_VERSION}
+    container_name: partdb-server
+    restart: unless-stopped
+
+    entrypoint:
+      - /partdb-secret-entrypoint.sh
+
+    command:
+      - /usr/local/bin/apache2-foreground
+
+    environment:
+      DOMAIN: ${DOMAIN}
+
+      PARTDB_DEFAULT_LANG: ${PARTDB_DEFAULT_LANG}
+      PARTDB_DEFAULT_TIMEZONE: ${PARTDB_DEFAULT_TIMEZONE}
+      PARTDB_BASE_CURRENCY: ${PARTDB_BASE_CURRENCY}
+      PARTDB_INSTANCE_NAME: ${PARTDB_INSTANCE_NAME}
+      PARTDB_SAML_ROLE_MAPPING: "${PARTDB_SAML_ROLE_MAPPING}"
+
+      MARIADB_DATABASE: ${MARIADB_DATABASE}
+      MARIADB_USER: ${MARIADB_USER}
+
+      APP_ENV: docker
+      DB_AUTOMIGRATE: "true"
+
+    secrets:
+      - partdb_app_secret
+      - mariadb_password
+      - authentik_saml_idp_certificate
+      - partdb_saml_sp_certificate
+      - partdb_saml_sp_private_key
+
+    volumes:
+      - partdb_uploads:/var/www/html/uploads
+      - partdb_public_media:/var/www/html/public/media
+
+      - ./scripts/partdb-entrypoint.sh:/partdb-secret-entrypoint.sh:ro
+
+      - ./config/zz-partdb.ini:/etc/php/8.4/fpm/conf.d/99-partdb.ini:ro
+      - ./config/zz-partdb.ini:/etc/php/8.4/cli/conf.d/99-partdb.ini:ro
+
+    networks:
+      - web
+      - partdb_internal
+
+    depends_on:
+      mariadb:
+        condition: service_healthy
+
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=web
+
+      - traefik.http.routers.partdb.rule=Host(`partdb.${DOMAIN}`)
+      - traefik.http.routers.partdb.entrypoints=websecure
+      - traefik.http.routers.partdb.tls=true
+      - traefik.http.routers.partdb.tls.certresolver=letsencrypt
+      - traefik.http.routers.partdb.middlewares=authentik@docker
+      - traefik.http.routers.partdb.service=partdb
+
+      - traefik.http.services.partdb.loadbalancer.server.port=80
+
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
+
+  mariadb:
+    image: mariadb:${MARIADB_VERSION}
+    container_name: partdb-mariadb
+    restart: unless-stopped
+
+    environment:
+      MARIADB_DATABASE: ${MARIADB_DATABASE}
+      MARIADB_USER: ${MARIADB_USER}
+      MARIADB_PASSWORD_FILE: /run/secrets/mariadb_password
+      MARIADB_ROOT_PASSWORD_FILE: /run/secrets/mariadb_root_password
+
+    secrets:
+      - mariadb_password
+      - mariadb_root_password
+
+    volumes:
+      - mariadb_data:/var/lib/mysql
+
+    networks:
+      - partdb_internal
+
+    healthcheck:
+      test:
+        - CMD
+        - healthcheck.sh
+        - --connect
+        - --innodb_initialized
+      start_period: 30s
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
+
+
+networks:
+  web:
+    external: true
+    name: web
+
+  partdb_internal:
+    name: partdb_internal
+    internal: true
+
+
+volumes:
+  partdb_uploads:
+    name: partdb_uploads
+
+  partdb_public_media:
+    name: partdb_public_media
+
+  mariadb_data:
+    name: partdb_mariadb_data
+
+
+secrets:
+  partdb_app_secret:
+    file: ./secrets/partdb_app_secret
+
+  mariadb_password:
+    file: ./secrets/mariadb_password
+
+  mariadb_root_password:
+    file: ./secrets/mariadb_root_password
+
+  authentik_saml_idp_certificate:
+    file: ./secrets/authentik_saml_idp_certificate
+
+  partdb_saml_sp_certificate:
+    file: ./secrets/partdb_saml_sp_certificate
+
+  partdb_saml_sp_private_key:
+    file: ./secrets/partdb_saml_sp_private_key
