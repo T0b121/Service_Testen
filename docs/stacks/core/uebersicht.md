@@ -117,7 +117,7 @@ Dadurch können spätere Worker-Aufgaben eingeschränkt sein, beispielsweise:
 - externe Provider
 - Updateprüfungen
 
-Falls eine solche Funktion benötigt wird, erhält der Worker ein separates, nicht internes Egress-Netzwerk. Er muss dafür nicht an `web` angeschlossen werden.
+Falls eine solche Funktion benötigt wird, wird dafür eine versionierte Stack-Erweiterung mit einem separaten, nicht internen Egress-Netzwerk vorgesehen. Der Worker muss dafür nicht an `web` angeschlossen werden.
 
 ## 8. Volumes
 
@@ -128,7 +128,7 @@ Falls eine solche Funktion benötigt wird, erhält der Worker ein separates, nic
 | `core_traefik_acme_staging` | ACME-Staging-Konto und Zertifikate |
 | `core_traefik_acme_production` | späteres Produktionskonto und Zertifikate |
 
-Welches ACME-Volume aktiv ist, wird über `.env` bestimmt.
+Welches ACME-Volume aktiv ist, wird über `TRAEFIK_ACME_VOLUME` in der lokalen `.env` bestimmt.
 
 ## 9. Secrets
 
@@ -171,7 +171,7 @@ docker exec core-traefik \
   --entrypoints.ping.address=:8082
 ```
 
-## 12. Traefik-Dashboard und Authentik
+## 12. Traefik-Dashboard und Authentik-Outpost-Routen
 
 Dashboard-Router:
 
@@ -182,7 +182,9 @@ Ziel api@internal
 Middleware authentik
 ```
 
-Separater Outpost-Router:
+Für Single-Application-Forward-Auth benötigt jede geschützte Anwendungsdomain einen separaten Outpost-Pfad unter `/outpost.goauthentik.io/`.
+
+### Dashboard-Outpost
 
 ```text
 Host proxy.<DOMAIN>
@@ -191,8 +193,6 @@ Ziel Authentik Server
 keine Forward-Auth-Middleware
 Priorität 100
 ```
-
-Der separate Outpost-Router ist notwendig, damit der Authentik-Callback nicht mit 404 endet.
 
 ## 13. Forward-Auth-Antwortgröße
 

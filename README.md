@@ -1,41 +1,42 @@
 # Serverdienste-Dokumentation
 
-Diese Dokumentation beschreibt die gemeinsame Serverbasis und die einzelnen Docker-Compose-Stacks dieses Repositorys.
+Diese Dokumentation beschreibt die gemeinsame Serverbasis und die Docker-Compose-Stacks dieses Repositorys.
 
-`<DOMAIN>` steht überall für die in der lokalen `.env` konfigurierte Basisdomain.  
-`<PROJEKT_ROOT>` bezeichnet das Root-Verzeichnis des Git-Repositorys, in dem `README.md`, `.gitignore`, `Compose/` und `docs/` liegen.
+`<DOMAIN>` steht überall für die lokal konfigurierte Basisdomain.
+`<PROJEKT_ROOT>` bezeichnet das Root-Verzeichnis dieses Git-Repositorys, in dem `README.md`, `.gitignore`, `Compose/` und `docs/` liegen.
 
 Platzhalter in spitzen Klammern sind vor der Ausführung zu ersetzen. Sie sind keine gültige Shell-Syntax. Beispiel: Aus `auth.<DOMAIN>` wird mit dem Wert aus `DOMAIN=` die tatsächliche Authentik-Adresse.
+
+Für den Ablauf der Erstinstallation: [Schnellstart](SCHNELLSTART.md). Öffentliche Adressen: [Dienste](docs/dienste.md).
 
 ## Stacks
 
 | Stack | Enthaltene Dienste | Öffentliche Endpunkte | Vorausgesetzte Stacks | Compose-Verzeichnis |
 |---|---|---|---|---|
 | `core` | Traefik, Authentik Server, Authentik Worker, PostgreSQL | `https://auth.<DOMAIN>`<br>`https://proxy.<DOMAIN>/dashboard/` | Keine | `Compose/core/` |
+| `partdb` | Part-DB, MariaDB | `https://partdb.<DOMAIN>` | `core` | `Compose/partdb/` |
 
-### Hinweise zum Core-Stack
+## Installationsprinzip
 
-- Nur Traefik veröffentlicht Host-Ports: TCP 80 und 443.
-- Authentik ist über Traefik erreichbar.
-- PostgreSQL und Authentik Worker sind ausschließlich intern erreichbar.
-- Das Traefik-Dashboard wird durch Authentik geschützt.
-- `https://proxy.<DOMAIN>/` darf absichtlich `404 page not found` liefern. Der vorgesehene Pfad lautet `/dashboard/`.
-- Während Aufbau und Prüfung wird Let’s Encrypt Staging verwendet.
+Die versionierten Dateien unter `Compose/` werden bei einer normalen Installation **nicht bearbeitet**.
+
+Installationsabhängige Daten werden stattdessen über folgende Stellen bereitgestellt:
+
+- lokale `.env` im jeweiligen Stack-Verzeichnis,
+- lokale Dateien unter `secrets/`,
+- Einstellungen in den jeweiligen Dienstoberflächen.
+
+Die Basisdomain ist frei wählbar. Feste Namen und Kennungen eines Stacks sind in seinen versionierten Dateien dokumentiert. Wer sie ändert, ändert damit die Architektur und nicht nur eine Installationsvariable.
 
 ## Empfohlene Reihenfolge
 
-1. [Server vorbereiten](docs/server/vorbereiten.md)
-2. [Server konfigurieren](docs/server/konfigurieren.md)
-3. [Projektkonventionen lesen](docs/projekt-konventionen.md)
-4. [Core-Stack überblicken](docs/stacks/core/uebersicht.md)
-5. [Core-Stack vorbereiten](docs/stacks/core/vorbereiten.md)
-6. [Core-Stack erstmals starten und prüfen](docs/stacks/core/erststart-und-pruefung.md)
-7. [Authentik für das Traefik-Dashboard einrichten](docs/stacks/core/authentik-einrichten.md)
+Die von oben nach unten abzuarbeitende Liste steht im [Schnellstart](SCHNELLSTART.md). Details bleiben in den jeweiligen Stack-Dokumenten.
 
 ## Dokumentation
 
 ### Allgemein
 
+- [Dienste](docs/dienste.md)
 - [Projektkonventionen](docs/projekt-konventionen.md)
 - [TLS und Zertifikate](docs/tls-und-zertifikate.md)
 - [Backup und Wiederherstellung](docs/backup-und-wiederherstellung.md)
@@ -58,3 +59,15 @@ Platzhalter in spitzen Klammern sind vor der Ausführung zu ersetzen. Sie sind k
 - [Betrieb](docs/stacks/core/betrieb.md)
 - [Backup und Wiederherstellung](docs/stacks/core/backup-und-wiederherstellung.md)
 - [Fehlerbehebung](docs/stacks/core/fehlerbehebung.md)
+
+### Stack `partdb`
+
+- [Übersicht](docs/stacks/partdb/uebersicht.md)
+- [Vorbereiten](docs/stacks/partdb/vorbereiten.md)
+- [Authentik einrichten](docs/stacks/partdb/authentik-einrichten.md)
+- [Erststart und Prüfung](docs/stacks/partdb/erststart-und-pruefung.md)
+- [Verwaltung und Anwendungseinstellungen](docs/stacks/partdb/verwaltung.md)
+- [Betrieb](docs/stacks/partdb/betrieb.md)
+- [API, KiCad und MCP](docs/stacks/partdb/api-kicad-und-mcp.md)
+- [Backup und Wiederherstellung](docs/stacks/partdb/backup-und-wiederherstellung.md)
+- [Fehlerbehebung](docs/stacks/partdb/fehlerbehebung.md)

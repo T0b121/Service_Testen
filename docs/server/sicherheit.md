@@ -144,12 +144,11 @@ Keine Secrets in Diagnoseausgaben veröffentlichen.
 
 ## 12. Minimale Angriffsfläche
 
-Im Core-Stack:
+Im gesamten aktuellen Projekt veröffentlicht nur Traefik Host-Ports:
 
-- kein Traefik-Port 8080 am Host
-- PostgreSQL ohne Host-Port
-- Authentik ohne Host-Port
-- Worker ohne Host-Port
-- nur Traefik auf 80 und 443
-- `exposedByDefault=false`
-- nur ausdrücklich gelabelte Dienste werden veröffentlicht
+```text
+80/tcp
+443/tcp
+```
+
+Die konkreten Freigaben, internen Netzwerke und Schutzschichten stehen in den einzelnen Stack-Dokumentationen. Neue Dienste erhalten keine Host-Ports oder Ausnahmen von der Zugriffssteuerung ohne bewusste Architekturentscheidung.

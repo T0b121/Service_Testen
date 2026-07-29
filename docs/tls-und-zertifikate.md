@@ -40,6 +40,8 @@ Router wählen den Resolver nur über seinen Namen:
 - traefik.http.routers.traefik-dashboard.tls.certresolver=letsencrypt
 ```
 
+Alle öffentlichen Router teilen die zentrale ACME-Konfiguration von Traefik.
+
 Diese Labels werden beim Wechsel zwischen Staging und Produktion **nicht geändert**.
 
 Der aktive ACME-Server und das verwendete Volume kommen aus `.env`:
@@ -80,20 +82,24 @@ Eigenschaften:
 
 ## 5. Voraussetzungen vor Produktion
 
-Vor dem Wechsel müssen alle Punkte erfüllt sein:
+Der Produktionswechsel wird im **Core-Stack** durchgeführt, weil dort Traefik und der ACME-Resolver konfiguriert sind. Die versionierten Router-Labels werden dabei nicht geändert.
 
-- DNS-A-Einträge stimmen.
+Vor dem Wechsel müssen mindestens die Core-Prüfungen erfolgreich sein:
+
+- DNS-A-Einträge für die bereits eingerichteten öffentlichen Dienste stimmen.
 - Vorhandene AAAA-Einträge stimmen und IPv6 ist erreichbar.
 - TCP 80 und 443 sind öffentlich erreichbar.
 - HTTP wird auf HTTPS weitergeleitet.
 - Traefik ist `healthy`.
 - Authentik Server, Worker und PostgreSQL sind `healthy`.
 - `https://auth.<DOMAIN>` funktioniert.
-- der Outpost-Ping liefert `204`.
+- der Authentik-Outpost-Ping liefert `204`.
 - das Traefik-Dashboard funktioniert nach Authentik-Anmeldung.
-- der Callback endet nicht mit `404`.
-- Zugriff für Nicht-Administratoren wurde geprüft.
+- der Dashboard-Callback endet nicht mit `404`.
+- Zugriff für Nicht-Administratoren wurde negativ getestet.
 - Traefik-Logs enthalten keine ungelösten ACME-Fehler.
+
+Bei bereits eingerichteten zusätzlichen Stacks außerdem die in deren Betriebsdokumentation vorgesehenen Erreichbarkeits- und Zugriffstests ausführen.
 
 ## 6. Von Staging auf Produktion wechseln
 
@@ -159,6 +165,8 @@ docker compose logs --tail=150 traefik
 
 Das Produktionsvolume wird beim ersten Start automatisch angelegt. Das Staging-Volume bleibt getrennt erhalten.
 
+Part-DB benötigt dabei keine Änderung an seiner `compose.yml` oder `.env`. Sein Router verweist bereits auf den Resolvernamen `letsencrypt`; dessen Staging-/Produktionsziel wird zentral im Core-Stack bestimmt.
+
 ## 7. Warum getrennte Volumes?
 
 Traefik speichert in `/acme/acme.json` unter anderem:
@@ -177,9 +185,11 @@ core_traefik_acme_production
 
 Staging-Daten werden nicht in das Produktionsvolume kopiert.
 
-## 8. Zertifikat kontrollieren
+## 8. Zertifikate kontrollieren
 
-Mit OpenSSL:
+Für jeden öffentlichen Host kann dasselbe Prüfmuster verwendet werden.
+
+Authentik:
 
 ```bash
 openssl s_client \
@@ -193,26 +203,35 @@ openssl s_client \
       -serial
 ```
 
-Für das Dashboard:
+Traefik-Dashboard:
 
 ```bash
 openssl s_client \
   -connect proxy.<DOMAIN>:443 \
   -servername proxy.<DOMAIN> \
   </dev/null 2>/dev/null \
-  | openssl x509 -noout \
-      -subject \
-      -issuer \
-      -dates
+  | openssl x509 -noout -subject -issuer -dates
 ```
 
-Zusätzlich im Browser prüfen:
+Weitere öffentliche Dienste gemäß [Dienste-Übersicht](dienste.md):
 
-- Domainname
-- Aussteller
-- Gültigkeitszeitraum
-- keine Staging-Warnung
-- vollständige Zertifikatskette
+```bash
+openssl s_client \
+  -connect <ADRESSE>:443 \
+  -servername <ADRESSE> \
+  </dev/null 2>/dev/null \
+  | openssl x509 -noout -subject -issuer -dates
+```
+
+Zusätzlich im Browser beziehungsweise Client prüfen:
+
+- Domainname,
+- Aussteller,
+- Gültigkeitszeitraum,
+- keine Staging-Warnung im Produktivbetrieb,
+- vollständige Zertifikatskette.
+
+Öffentlich vertrauenswürdige Zertifikate sind besonders wichtig für Maschinenclients wie KiCad, die Staging- oder selbstsignierten Zertifikaten nicht automatisch vertrauen.
 
 ## 9. Automatische Erneuerung
 
@@ -259,7 +278,9 @@ Nie den Produktionsserver mit dem Staging-Volume oder umgekehrt kombinieren.
 
 Let’s Encrypt bleibt die Standardkonfiguration. Alternativen sind nur sinnvoll, wenn dafür ein konkreter betrieblicher Grund besteht.
 
-Traefik unterstützt External Account Binding:
+Die aktuell versionierte Core-Konfiguration macht bei einer normalen Installation nur `ACME_CA_SERVER` und `TRAEFIK_ACME_VOLUME` über `.env` variabel. Zusätzliche ACME-Funktionen wie External Account Binding (EAB) sind **nicht** in `Compose/core/compose.yml` verdrahtet. Ein EAB-Anbieter erfordert deshalb zuerst eine bewusst versionierte Erweiterung des Stackdesigns. Es reicht nicht, EAB-Werte nur in `.env` einzutragen, und die `compose.yml` soll nicht installationsspezifisch lokal editiert werden.
+
+Traefik selbst unterstützt External Account Binding:
 
 ```yaml
 - --certificatesresolvers.<resolver>.acme.eab.kid=<EAB_KID>
@@ -326,11 +347,12 @@ Zu beachten:
 
 ### Sichere Ablage von EAB-Werten
 
-Die Default-Konfiguration verwendet keine EAB-Werte. Bei einer späteren Umstellung gilt:
+Die Default-Konfiguration verwendet keine EAB-Werte. Bei einer späteren, **versionierten** Erweiterung gilt:
 
-- HMAC niemals in `compose.yml` eintragen.
-- lokale `.env` mindestens mit Modus `600` schützen und durch Git ignorieren.
-- bevorzugt einen geeigneten Secret-Manager oder eine außerhalb von Git gerenderte statische Traefik-Konfiguration verwenden.
+- HMAC niemals direkt in `compose.yml` eintragen.
+- nur Variablen oder Secret-Pfade verwenden, die die versionierte Stackkonfiguration ausdrücklich an Traefik weitergibt; ein zusätzlicher Eintrag in `.env` alleine hat keine Wirkung.
+- lokale `.env` mindestens mit Modus `600` schützen und durch Git ignorieren, sofern das gewählte Design dort nicht geheime EAB-Metadaten ablegt.
+- für den HMAC bevorzugt einen Datei-Secret- oder geeigneten Secret-Manager-Ansatz verwenden.
 - den EAB-Wert nicht in Logs oder Supportausgaben kopieren.
 
 ## Offizielle Referenzen

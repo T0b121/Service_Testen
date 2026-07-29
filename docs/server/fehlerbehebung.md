@@ -119,9 +119,13 @@ Belegenden Dienst kontrolliert stoppen oder Architektur anpassen.
 ## 10. DNS zeigt auf falsche Adresse
 
 ```bash
-getent ahostsv4 auth.<DOMAIN>
-getent ahostsv6 auth.<DOMAIN>
+getent ahostsv4 <ADRESSE>
+
+# nur bei bewusst verwendetem IPv6:
+getent ahostsv6 <ADRESSE>
 ```
+
+Die öffentlichen Adressen stehen in der [Dienste-Übersicht](../dienste.md). Bei einem neuen Dienst wird dort nur eine Zeile ergänzt.
 
 Mit Serveradressen vergleichen:
 
@@ -139,8 +143,8 @@ Mögliche Ursache: Ein AAAA-Eintrag zeigt auf nicht erreichbares IPv6.
 Extern prüfen:
 
 ```bash
-curl -4 -I http://auth.<DOMAIN>
-curl -6 -I http://auth.<DOMAIN>
+curl -4 -I http://<ADRESSE>
+curl -6 -I http://<ADRESSE>
 ```
 
 AAAA korrigieren oder entfernen, falls IPv6 nicht betrieben wird.
@@ -194,8 +198,8 @@ docker network create web
 
 ```bash
 git check-ignore -v \
-  Compose/core/.env \
-  Compose/core/secrets/authentik_secret_key
+  Compose/<STACK>/.env \
+  Compose/<STACK>/secrets/<SECRET_DATEI>
 ```
 
 Bereits eingecheckte Dateien müssen zusätzlich aus dem Git-Index entfernt und gegebenenfalls Secrets rotiert werden.

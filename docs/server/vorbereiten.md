@@ -19,6 +19,7 @@ Benötigt werden:
 - Docker Compose V2 als `docker compose`
 - Git
 - OpenSSL
+- Texteditor, beispielsweise `nano` oder `vi`
 - nftables oder eine gleichwertige Host-Firewall
 - funktionierende Systemzeit
 - ausreichend Speicherplatz
@@ -80,6 +81,7 @@ sudo apt install -y \
   ca-certificates \
   curl \
   git \
+  nano \
   openssl \
   nftables
 ```
@@ -217,14 +219,19 @@ Compose/
 docs/
 ```
 
-Existierendes Repository:
+Für eine Installation wird der versionierte Repository-Stand verwendet. Auf einem neuen System kann das Repository beispielsweise so geklont werden:
 
 ```bash
+git clone <REPOSITORY_URL> <PROJEKT_ROOT>
 cd <PROJEKT_ROOT>
 git status
 ```
 
-Neues Repository:
+`<REPOSITORY_URL>` ist die Clone-URL dieses Repositorys. `<PROJEKT_ROOT>` ist ein frei wählbarer lokaler Zielpfad und keine feste Vorgabe des Projekts.
+
+Erwartet ist ein sauberer Arbeitsbaum, bevor lokale `.env`- und `secrets/`-Dateien angelegt werden. Diese lokalen Dateien sind durch `.gitignore` geschützt und verändern den Git-Status nicht.
+
+Falls das Repository bewusst neu initialisiert wird:
 
 ```bash
 mkdir -p <PROJEKT_ROOT>
@@ -232,16 +239,18 @@ cd <PROJEKT_ROOT>
 git init
 ```
 
-## 11. Grundstruktur
+Die eigentlichen versionierten Projektdateien müssen anschließend aus dem vorgesehenen Repository-Stand übernommen werden; ein leeres `git init` ersetzt sie nicht.
+
+## 11. Lokale Grundstruktur
+
+Die versionierten Verzeichnisse unter `Compose/` und `docs/` kommen aus Git. Lokale Secret-Verzeichnisse werden erst bei der Vorbereitung des jeweiligen Stacks angelegt:
 
 ```bash
 cd <PROJEKT_ROOT>
-
-mkdir -p \
-  Compose/core/secrets \
-  docs/server \
-  docs/stacks/core
+ls Compose docs
 ```
+
+`.env`-Dateien werden erst in den jeweiligen Stack-Anleitungen erzeugt. Die versionierten `compose.yml`, `config/`- und `scripts/`-Dateien werden während einer normalen Installation nicht editiert.
 
 ## 12. Abschlussprüfung
 

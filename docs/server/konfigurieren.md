@@ -4,43 +4,39 @@ Platzhalter wie `<DOMAIN>`, `<SSH_PORT>` und `<ÖFFENTLICHE_IPV4>` sind vor der 
 
 ## 1. DNS
 
-Für den Core-Stack werden benötigt:
-
-```text
-auth.<DOMAIN>
-proxy.<DOMAIN>
-```
+Die verwendeten öffentlichen Namen stehen in der [Dienste-Übersicht](../dienste.md). Jeder Name benötigt einen passenden DNS-Eintrag, bevor sein Stack gestartet wird.
 
 ### Einzelne Einträge
 
 ```text
-auth     A       <ÖFFENTLICHE_IPV4>
-proxy    A       <ÖFFENTLICHE_IPV4>
-
-auth     AAAA    <ÖFFENTLICHE_IPV6>
-proxy    AAAA    <ÖFFENTLICHE_IPV6>
+<SUBDOMAIN>      A       <ÖFFENTLICHE_IPV4>
+<SUBDOMAIN>      AAAA    <ÖFFENTLICHE_IPV6>
 ```
 
 ### Wildcard
 
+Alternativ kann ein bewusst verwendeter Wildcard-Eintrag die Subdomains abdecken:
+
 ```text
-*        A       <ÖFFENTLICHE_IPV4>
-*        AAAA    <ÖFFENTLICHE_IPV6>
+*         A       <ÖFFENTLICHE_IPV4>
+*         AAAA    <ÖFFENTLICHE_IPV6>
 ```
 
-Nur einen AAAA-Eintrag setzen, wenn IPv6 vom Internet aus bis zum Server funktioniert.
+Nur einen AAAA-Eintrag setzen, wenn IPv6 vom Internet aus tatsächlich bis zum Server auf TCP 80 und 443 funktioniert.
 
 Prüfung:
 
 ```bash
-getent ahostsv4 auth.<DOMAIN>
-getent ahostsv4 proxy.<DOMAIN>
-
-getent ahostsv6 auth.<DOMAIN>
-getent ahostsv6 proxy.<DOMAIN>
+getent ahostsv4 <ADRESSE>
 ```
 
-Erwartet: `auth.<DOMAIN>` und `proxy.<DOMAIN>` liefern dieselbe öffentliche IPv4-Adresse. Bei konfiguriertem AAAA-Eintrag müssen beide Namen außerdem die öffentliche IPv6-Adresse liefern.
+Bei konfiguriertem IPv6:
+
+```bash
+getent ahostsv6 <ADRESSE>
+```
+
+Erwartet: Die verwendeten Namen liefern die für diesen Server vorgesehenen öffentlichen Adressen.
 
 Serveradressen:
 
@@ -184,7 +180,7 @@ Wichtig: Veröffentlichte Docker-Ports werden über Forwarding und NAT verarbeit
 
 > Nur Dienste veröffentlichen, die wirklich öffentlich erreichbar sein müssen.
 
-Im Core-Stack veröffentlicht ausschließlich Traefik TCP 80 und 443.
+Host-Ports werden nur veröffentlicht, wenn ein Stack sie ausdrücklich benötigt. Die Freigaben stehen in der jeweiligen Stack-Dokumentation.
 
 ## 5. Externes Docker-Netzwerk
 
@@ -211,7 +207,7 @@ Das Netzwerk wird außerhalb einzelner Compose-Stacks verwaltet, damit weitere S
 
 ## 6. Zentrale `.gitignore`
 
-Im Repository-Root:
+Die versionierte Datei im Repository-Root lautet im aktuellen Projektstand:
 
 ```gitignore
 # Umgebungsdateien
@@ -225,26 +221,25 @@ secrets/
 # Logs
 *.log
 
-# Lokale ACME-Dateien bei Bind-Mounts
+# Traefik ACME-Dateien
 acme*.json
-
-# Backups und Dumps
-backups/
-**/backups/
-*.dump
-*.backup
 ```
+
+Sie schützt damit insbesondere die lokalen `.env`-Dateien und alle stacklokalen `secrets/`-Verzeichnisse.
+
+Backups werden in diesem Projekt bewusst **außerhalb des Git-Repositorys** erstellt. Deshalb hängt deren Schutz nicht von zusätzlichen `backups/`- oder Dump-Regeln ab. Siehe [Backup und Wiederherstellung](../backup-und-wiederherstellung.md).
 
 Prüfen:
 
 ```bash
 cd <PROJEKT_ROOT>
 
-git check-ignore -v Compose/core/.env
-git check-ignore -v Compose/core/secrets/authentik_secret_key
+git check-ignore -v \
+  Compose/<STACK>/.env \
+  Compose/<STACK>/secrets/<SECRET_DATEI>
 ```
 
-Erwartet: Für beide Pfade erscheint eine passende Regel aus der zentralen `.gitignore`. Keine Ausgabe bedeutet, dass der jeweilige Pfad nicht ignoriert wird.
+Erwartet: Für jeden Pfad erscheint eine passende Regel aus der zentralen `.gitignore`. Keine Ausgabe für einen Pfad bedeutet, dass dieser nicht ignoriert wird.
 
 ## 7. Erreichbarkeit nach Traefik-Start
 
@@ -252,14 +247,13 @@ Erwartet: Für beide Pfade erscheint eine passende Regel aus der zentralen `.git
 sudo ss -lntp | grep -E ':(80|443)\s'
 ```
 
-Von extern testen:
+Nach dem Core-Start von extern testen:
 
 ```bash
 curl -I http://auth.<DOMAIN>
-curl -I http://proxy.<DOMAIN>/dashboard/
 ```
 
-Erwartet wird für beide Aufrufe `301` oder `308` und ein `Location`-Header mit der jeweiligen `https://`-Adresse.
+Erwartet wird `301` oder `308` und ein `Location`-Header mit der entsprechenden `https://`-Adresse. Weitere Dienste gemäß [Dienste-Übersicht](../dienste.md) einzeln prüfen.
 
 ## 8. Neustarttest
 

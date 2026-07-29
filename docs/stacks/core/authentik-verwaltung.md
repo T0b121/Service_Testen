@@ -37,7 +37,7 @@ Das automatisch erzeugte Konto `ak-outpost-...` ist ein internes Servicekonto vo
 |---|---|---|
 | `Anmeldename` / Username | eindeutiger primärer Bezeichner für die Anmeldung | `testuser` oder ein anderer eindeutiger Name |
 | `Display Name` | optionaler Anzeigename | `Test User` |
-| `Email Address` | optional; für E-Mail-Stages, Recovery und Benachrichtigungen | wegen der aktuell gesperrten SMTP-Verbindung leer lassen oder nur als Kontaktinformation eintragen |
+| `Email Address` | optional; für E-Mail-Stages, Recovery und Benachrichtigungen | als Kontaktinformation eintragen, wenn gewünscht; E-Mail-Funktionen sind in der Grundarchitektur noch nicht eingerichtet |
 | `Aktiv` | erlaubt die Anmeldung | aktiviert |
 | `Pfad` | organisatorischer Benutzerordner | `users` |
 | `Attribute` | optionale benutzerdefinierte Daten als JSON oder YAML | unverändert `{}` |
@@ -224,90 +224,59 @@ Regeln:
 - nur lokal und kurzzeitig verwenden.
 - nach erfolgreicher Wiederherstellung Passwort und MFA prüfen.
 
-## 12. E-Mail-Versand: aktueller Stand
+## 12. E-Mail-Versand: Grundarchitektur
 
-Der aktuelle Server darf aufgrund einer übergeordneten Firewall keine E-Mails versenden. Deshalb ist SMTP nicht Teil der Grundinstallation.
+SMTP ist **nicht Bestandteil der aktuellen Grundinstallation**.
 
-Folgen:
+Der Authentik Worker hängt ausschließlich im internen Docker-Netzwerk `core_auth`. Dieses Netzwerk ist `internal: true`, daher besitzt der Worker in der aktuellen Architektur keinen allgemeinen Internet-Egress zu externen SMTP-Servern.
 
-- keine Passwortzurücksetzung per E-Mail
-- keine E-Mail-Einladungen
-- keine E-Mail-Stages
-- keine normalen E-Mail-Benachrichtigungen
+Folgen, solange SMTP nicht als eigene Erweiterung eingerichtet wurde:
 
-Administratoren benötigen daher:
+- keine Passwortzurücksetzung per E-Mail,
+- keine E-Mail-Einladungen,
+- keine E-Mail-Stages, die externen Versand benötigen,
+- keine normalen E-Mail-Benachrichtigungen nach außen.
 
-- funktionierendes MFA-Wiederherstellungsverfahren
-- sicheren Zugriff auf das Adminpasswort
-- dokumentierten Recovery-Key-Ablauf
+Administratoren benötigen deshalb unabhängig von SMTP:
 
-## 13. Optionaler externer SMTP-Relay
+- funktionierendes MFA-Wiederherstellungsverfahren,
+- sicheren Zugriff auf das Adminpasswort,
+- dokumentierten Recovery-Key-Ablauf.
 
-Nur später einrichten, wenn die übergeordnete Firewall und das Worker-Netzwerk den Zielserver erreichen dürfen.
+## 13. SMTP später ergänzen
 
-Benötigte Werte:
+SMTP ist eine optionale **Stackdesign-Erweiterung**, keine installationsspezifische Handänderung.
 
-```text
-SMTP-Hostname
-SMTP-Port
-TLS- oder SSL-Modus
-Benutzername
-Passwort oder App-Passwort
-Absenderadresse
-```
+Für eine spätere Umsetzung müssen gemeinsam geplant und versioniert werden:
 
-Das SMTP-Passwort wird normalerweise vom Mailanbieter erzeugt. Ein App-Passwort darf nicht durch ein zufälliges lokales Passwort ersetzt werden.
+- Egress-Netzwerk für den Worker,
+- SMTP-Host und Port,
+- TLS-/SSL-Modus,
+- Absenderadresse,
+- Benutzername,
+- sichere Secret-Datei für Passwort beziehungsweise App-Passwort,
+- Weitergabe der erforderlichen Authentik-Umgebungsvariablen an Server/Worker,
+- Firewallregeln zum vorgesehenen SMTP-Ziel.
 
-Falls ein selbst verwalteter Relay ein frei wählbares Passwort verlangt:
+Ein vom Mailanbieter ausgegebenes Passwort oder App-Passwort wird nicht durch `openssl rand` ersetzt.
 
-```bash
-umask 077
-openssl rand -base64 32 \
-  | tr -d '\n' \
-  > secrets/authentik_email_password
-```
-
-Alternativ ein vom Anbieter ausgegebenes Passwort ohne Shell-History speichern:
-
-```bash
-umask 077
-read -rsp 'SMTP-Passwort: ' SMTP_PASSWORD
-printf '%s' "$SMTP_PASSWORD" \
-  > secrets/authentik_email_password
-unset SMTP_PASSWORD
-printf '\n'
-```
-
-Danach:
-
-```bash
-chmod 600 secrets/authentik_email_password
-stat -c '%A %n' secrets/authentik_email_password
-```
-
-Erwartet:
-
-```text
--rw------- secrets/authentik_email_password
-```
+Die vorhandene `Compose/core/compose.yml` wird bei einer normalen Installation **nicht** lokal dafür editiert. Sobald SMTP Teil des Projekts werden soll, wird die Erweiterung im Repository implementiert und anschließend für alle Installationen dokumentiert.
 
 <a id="netzwerk-für-e-mail-und-externe-aufgaben"></a>
 
 ## 14. Netzwerk für E-Mail und externe Aufgaben
 
-Der Worker hängt aktuell nur im internen Netzwerk `core_auth` und hat keinen allgemeinen Internet-Egress.
+Für eine künftige Erweiterung gilt als Architekturprinzip:
 
-Für SMTP oder externe Synchronisierung später:
+- separates nicht internes Egress-Netzwerk verwenden,
+- nur die tatsächlich ausgehend kommunizierenden Dienste anschließen,
+- keine zusätzlichen Host-Ports veröffentlichen,
+- Zielverkehr nach Möglichkeit über Host- oder Provider-Firewall begrenzen,
+- den Worker nicht allein wegen Internet-Egress in das gemeinsame Proxy-Netzwerk `web` aufnehmen.
 
-- separates nicht internes Egress-Netzwerk anlegen,
-- nur Worker anschließen, sofern nur er Egress benötigt,
-- keine Host-Ports veröffentlichen,
-- Zielverkehr zusätzlich über Host- oder Provider-Firewall begrenzen,
-- Worker nicht allein deshalb in `web` aufnehmen.
+## 15. E-Mail nach einer späteren Implementierung testen
 
-## 15. E-Mail testen
-
-Nach einer späteren SMTP-Konfiguration:
+Erst nachdem SMTP und der erforderliche Worker-Egress als versionierte Erweiterung umgesetzt wurden:
 
 ```bash
 docker compose exec \
@@ -315,7 +284,7 @@ docker compose exec \
   ak test_email <EMPFAENGER_EMAIL>
 ```
 
-Ohne freigegebenes Netzwerk oder Firewallregel wird der Test fehlschlagen.
+Vorher ist ein fehlgeschlagener externer E-Mail-Test erwartbar und kein Fehler der Core-Grundinstallation.
 
 ## 16. Hintergrundaufgaben
 

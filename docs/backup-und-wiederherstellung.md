@@ -29,38 +29,43 @@ Für jeden Stack werden mindestens geprüft:
 
 Nicht jedes Volume wird gleich gesichert. Datenbanken werden bevorzugt über anwendungskonsistente Dumps gesichert.
 
-## 3. Ablagestruktur
+## 3. Ablagestruktur und Speicherort
+
+Backups werden **außerhalb des Git-Repositorys** angelegt. Das ist sicherer als sich darauf zu verlassen, dass jede mögliche Dump- oder Archivdatei von `.gitignore` erfasst wird.
 
 Beispiel:
 
 ```text
-backups/
-└── 2026-07-26T190000Z/
-    ├── manifest.txt
-    ├── checksums.sha256
-    ├── configuration/
-    ├── secrets/
-    ├── databases/
-    └── volumes/
+$HOME/serverdienste-backups/
+└── <stack>/
+    └── 2026-07-26T190000Z/
+        ├── manifest.txt
+        ├── checksums.sha256
+        ├── configuration/
+        ├── secrets/
+        ├── databases/
+        └── volumes/
 ```
 
-Backup-Verzeichnisse gehören nicht in Git.
+Die zentrale `.gitignore` schützt die bekannten lokalen `.env`- und `secrets/`-Pfade. Backupdateien werden durch ihren Speicherort außerhalb von `<PROJEKT_ROOT>` vom Repository getrennt.
 
-Empfohlene `.gitignore`-Einträge:
+Keine Klartext-Backups unter `Compose/<stack>/` erzeugen.
 
-```gitignore
-backups/
-**/backups/
-*.dump
-*.backup
-```
+## 4. Zeitstempel und Arbeitsvariablen
 
-## 4. Zeitstempel
+Beispiel:
 
 ```bash
 BACKUP_TIMESTAMP="$(date -u +%Y-%m-%dT%H%M%SZ)"
-mkdir -p "backups/$BACKUP_TIMESTAMP"
+BACKUP_ROOT="$HOME/serverdienste-backups/<stack>"
+BACKUP_DIR="$BACKUP_ROOT/$BACKUP_TIMESTAMP"
+
+umask 077
+mkdir -p "$BACKUP_DIR"
+chmod 700 "$BACKUP_ROOT" "$BACKUP_DIR"
 ```
+
+`<stack>` wird durch den Stacknamen ersetzt, beispielsweise `core` oder `partdb`.
 
 UTC-Zeitstempel vermeiden Mehrdeutigkeiten bei Sommerzeit und Zeitzonen.
 
@@ -69,19 +74,19 @@ UTC-Zeitstempel vermeiden Mehrdeutigkeiten bei Sommerzeit und Zeitzonen.
 Erstellen:
 
 ```bash
-find "backups/$BACKUP_TIMESTAMP" \
+find "$BACKUP_DIR" \
   -type f \
   ! -name checksums.sha256 \
   -print0 \
   | sort -z \
   | xargs -0 sha256sum \
-  > "backups/$BACKUP_TIMESTAMP/checksums.sha256"
+  > "$BACKUP_DIR/checksums.sha256"
 ```
 
 Prüfen:
 
 ```bash
-cd "backups/$BACKUP_TIMESTAMP"
+cd "$BACKUP_DIR"
 sha256sum -c checksums.sha256
 ```
 
@@ -91,21 +96,21 @@ SHA-256 weist Dateiänderungen nach. Es verschlüsselt das Backup nicht und bewe
 
 Backups enthalten Passwörter, Schlüssel, Benutzerdaten und Zertifikate. Sie müssen verschlüsselt gespeichert und übertragen werden.
 
-Wenn ein Backup-Programm eine zufällige Passphrase benötigt:
+Wenn ein Backup-Programm eine zufällige Passphrase benötigt, wird sie bevorzugt direkt in einem Passwortmanager erzeugt. Alternativ kann lokal ein Zufallswert erzeugt und **unmittelbar** in den Passwortmanager übernommen werden:
 
 ```bash
-umask 077
-openssl rand -base64 32 \
-  | tr -d '\n' \
-  > backup-encryption-password
+openssl rand -base64 32
 ```
+
+Den ausgegebenen Wert nicht in das Backupverzeichnis oder das Git-Repository umleiten.
 
 Regeln:
 
 - Schlüssel oder Passphrase nicht im gleichen Speicherort wie das Backup ablegen.
-- Kopie in einem Passwortmanager oder getrennten sicheren Tresor speichern.
-- Dateimodus `600` setzen.
-- Keine Passphrase als Shellargument übergeben, wenn sie dadurch in Prozesslisten oder Shell-History sichtbar wird.
+- mindestens eine Kopie in einem Passwortmanager oder getrennten sicheren Tresor speichern.
+- falls eine lokale Schlüsseldatei erforderlich ist: außerhalb des Backup- und Repository-Pfads ablegen und Dateimodus `600` setzen.
+- keine Passphrase als Shellargument übergeben, wenn sie dadurch in Prozesslisten oder Shell-History sichtbar wird.
+- Terminal-Scrollback mit angezeigten Secrets entsprechend behandeln.
 - Base64 ist keine Verschlüsselung.
 
 Geeignete Werkzeuge sind beispielsweise Restic, BorgBackup, age oder GnuPG. Die konkrete Auswahl hängt vom Backupziel ab.
@@ -226,3 +231,4 @@ Prüfsummen und mehrere Backupgenerationen verwenden.
 ## 13. Stack-spezifische Dokumente
 
 - [Core: Backup und Wiederherstellung](stacks/core/backup-und-wiederherstellung.md)
+- [Part-DB: Backup und Wiederherstellung](stacks/partdb/backup-und-wiederherstellung.md)

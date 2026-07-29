@@ -158,14 +158,6 @@ services:
       - traefik.http.routers.authentik-outpost.service=authentik
       - traefik.http.routers.authentik-outpost.priority=100
 
-      # Authentik-Outpost für Part-DB
-      - traefik.http.routers.authentik-outpost-partdb.rule=Host(`partdb.${DOMAIN}`) && PathPrefix(`/outpost.goauthentik.io/`)
-      - traefik.http.routers.authentik-outpost-partdb.entrypoints=websecure
-      - traefik.http.routers.authentik-outpost-partdb.tls=true
-      - traefik.http.routers.authentik-outpost-partdb.tls.certresolver=letsencrypt
-      - traefik.http.routers.authentik-outpost-partdb.service=authentik
-      - traefik.http.routers.authentik-outpost-partdb.priority=100
-
     networks:
       - web
       - core_auth

@@ -4,15 +4,19 @@ Diese Regeln gelten stackübergreifend. Stack-spezifische Dienste, Ports, Netzwe
 
 ## 1. Verzeichnisstruktur
 
+Ein Stack kann neben `compose.yml` zusätzliche **versionierte** Hilfsdateien besitzen. Installationsabhängige Dateien bleiben dagegen lokal.
+
 ```text
 <PROJEKT_ROOT>/
 ├── README.md
 ├── .gitignore
 ├── Compose/
 │   └── <stack-name>/
-│       ├── compose.yml
-│       ├── .env
-│       └── secrets/
+│       ├── compose.yml              # versioniert
+│       ├── config/                  # optional, versioniert
+│       ├── scripts/                 # optional, versioniert
+│       ├── .env                     # lokal, nicht versioniert
+│       └── secrets/                 # lokal, nicht versioniert
 └── docs/
     ├── ...
     └── stacks/
@@ -27,8 +31,26 @@ Regeln:
 - Der Compose-Dateiname lautet einheitlich `compose.yml`.
 - Dateinamen der Dokumentation verwenden Kleinbuchstaben und Bindestriche.
 - `<PROJEKT_ROOT>` ist das Root-Verzeichnis des Git-Repositorys und kein fest vorgegebener Betriebssystempfad.
+- `config/` und `scripts/` enthalten nur wiederverwendbare, installationsunabhängige Dateien.
+- `.env`, `secrets/`, lokal erzeugte Zertifikate und private Schlüssel werden nicht versioniert.
 
-## 2. Mindestdokumentation pro Stack
+## 2. Installationsprinzip: versionierte Docker-Dateien nicht lokal bearbeiten
+
+Eine normale Installation wird durch **lokale Eingabedaten** konfiguriert, nicht durch Handänderungen an den versionierten Docker-Dateien.
+
+Die vorgesehenen Eingabestellen sind:
+
+- `.env` für nicht geheime installationsabhängige Werte,
+- `secrets/` für Passwörter, Schlüssel und andere lokale Secret-Dateien,
+- Verwaltungsoberflächen beziehungsweise APIs der Anwendungen für anwendungseigene Konfiguration.
+
+`compose.yml`, versionierte Dateien unter `config/` und versionierte Skripte unter `scripts/` bleiben auf allen Installationen gleich. Dadurch kann derselbe Git-Stand mit unterschiedlichen Basisdomains und lokalen Secrets verwendet werden.
+
+Eine Änderung an diesen versionierten Dateien ist eine **Änderung des Stackdesigns**. Sie wird im Repository vorgenommen und dokumentiert, nicht einmalig auf einem einzelnen Server.
+
+Projektweite feste Konventionen dürfen in versionierten Dateien vorkommen. Konkrete Subdomains, Namen und Kennungen werden beim jeweiligen Stack dokumentiert; die Basisdomain wird weiterhin nur über `DOMAIN` gewählt.
+
+## 3. Mindestdokumentation pro Stack
 
 Jeder Stack erhält mindestens:
 
@@ -54,14 +76,14 @@ Die Stack-Dokumentation muss mindestens enthalten:
 - benötigte Secrets
 - Erstellung aller Passwörter, Schlüssel und Tokens
 - Erststart
-- Healthchecks
+- Healthchecks beziehungsweise ausdrücklich, wenn ein Dienst keinen Docker-Healthcheck besitzt
 - Logbefehle
 - normaler Betrieb
 - Backup-Inventar
 - Wiederherstellungsreihenfolge
 - typische Fehler
 
-## 3. `.env`
+## 4. `.env`
 
 Die echte `.env`:
 
@@ -71,7 +93,11 @@ Die echte `.env`:
 - erhält Dateimodus `600`,
 - wird in der Stack-Dokumentation vollständig als kommentierte Vorlage gezeigt.
 
-Eine physische `.env.example` ist in diesem Projekt nicht erforderlich. Die Vorlage wird in `vorbereiten.md` gepflegt, damit Kommentare, Herkunft und Zweck jedes Werts direkt erläutert werden.
+Eine physische `.env.example` ist in diesem Projekt nicht erforderlich. Die Vorlage wird in `vorbereiten.md` gepflegt, damit Herkunft und Zweck jedes Werts direkt erläutert werden.
+
+Wichtig: Docker Compose verwendet `.env` zunächst für die **Variablenersetzung**. Eine zusätzliche Variable wird nicht automatisch in einen Container injiziert, nur weil sie in `.env` steht. Sie muss in `compose.yml`, einem `env_file` oder einem dafür vorgesehenen Wrapper tatsächlich an den Dienst weitergegeben werden.
+
+Daraus folgt für dieses Projekt: Neue env-only Funktionen werden nicht durch beliebige zusätzliche Zeilen in `.env` und nicht durch lokale Compose-Handänderungen „aktiviert“. Wenn eine solche Funktion benötigt wird, wird die Weitergabe reproduzierbar im versionierten Stackdesign ergänzt.
 
 Prüfung:
 
@@ -87,7 +113,7 @@ Erwartet:
 - `git check-ignore` gibt die passende Regel aus `.gitignore` aus.
 - Keine Ausgabe von `git check-ignore` bedeutet, dass die Datei nicht ignoriert wird.
 
-## 4. Secrets
+## 5. Secrets
 
 Secrets liegen unter:
 
@@ -99,14 +125,14 @@ Regeln:
 
 - Das Verzeichnis wird vollständig von Git ignoriert.
 - Secret-Dateien erhalten Modus `600`.
-- Secret-Inhalte werden nicht mit `cat`, `echo` oder in Logs ausgegeben.
+- Secret-Inhalte werden nicht mit `cat`, `echo` oder ähnlichen Befehlen auf Terminal beziehungsweise in Logs ausgegeben. Internes Einlesen mit direkter Umleitung in eine geschützte Datei ist davon zu unterscheiden.
 - Jedes Secret wird nur den Diensten zugeordnet, die es tatsächlich benötigen.
 - Die Erzeugung jedes Secrets wird in der Stack-Dokumentation beschrieben.
 - Secret-Dateien werden verschlüsselt gesichert.
 
 Bei lokalem Docker Compose werden dateibasierte Secrets im Container unter `/run/secrets/<name>` eingehängt. Auf dem Host bleiben die Quelldateien normale Klartextdateien. Compose-Secrets verhindern daher nicht den Zugriff eines privilegierten Host-Benutzers und ersetzen keinen verschlüsselten Secret-Manager.
 
-## 5. Passwörter, Schlüssel, Hashes und Kodierungen
+## 6. Passwörter, Schlüssel, Hashes und Kodierungen
 
 Diese Begriffe sind nicht austauschbar:
 
@@ -180,7 +206,7 @@ Insbesondere:
 - `eab.kid`: vom ACME-Anbieter vergebene Kennung
 - `eab.hmacEncoded`: vom ACME-Anbieter ausgegebener HMAC-Schlüssel in der verlangten Kodierung
 
-## 6. Image-Versionen
+## 7. Image-Versionen
 
 Es wird kein `latest` verwendet.
 
@@ -202,7 +228,7 @@ Unterschiede:
 
 Vor jeder Aktualisierung werden Release Notes, Backups und Rollback-Möglichkeit geprüft.
 
-## 7. Netzwerke und Ports
+## 8. Netzwerke und Ports
 
 - Nur tatsächlich öffentliche Dienste erhalten `ports:`.
 - Interne Dienste verwenden Docker-Netzwerke und gegebenenfalls `expose:`.
@@ -213,7 +239,7 @@ Vor jeder Aktualisierung werden Release Notes, Backups und Rollback-Möglichkeit
 
 `expose:` veröffentlicht keinen Port am Host.
 
-## 8. Volumes
+## 9. Volumes
 
 Persistente Daten werden in benannten Volumes gespeichert.
 
@@ -226,8 +252,7 @@ Namensschema:
 Beispiele:
 
 ```text
-core_postgresql_data
-core_authentik_data
+<stack>_<dienst>_data
 ```
 
 Jeder Stack dokumentiert:
@@ -237,13 +262,13 @@ Jeder Stack dokumentiert:
 - ob der Dienst vor einer Volume-Sicherung gestoppt werden muss,
 - in welcher Reihenfolge wiederhergestellt wird.
 
-## 9. Startabhängigkeiten
+## 10. Startabhängigkeiten
 
 Die zentrale `README.md` nennt für jeden Stack die **vorausgesetzten Stacks**.
 
 Vor dem Start eines Stacks müssen dessen vorausgesetzte Stacks laufen und gesund sein. Innerhalb eines Compose-Stacks werden Dienstabhängigkeiten über `depends_on` und Healthchecks abgebildet, soweit dies technisch sinnvoll ist.
 
-## 10. Standardbefehle
+## 11. Standardbefehle
 
 Alle Befehle werden im jeweiligen Stack-Verzeichnis ausgeführt:
 
@@ -300,7 +325,7 @@ docker compose down
 
 `docker compose down -v` wird nur bei ausdrücklich beabsichtigter Datenlöschung verwendet.
 
-## 11. Log-Rotation
+## 12. Log-Rotation
 
 Jeder dauerhafte Dienst erhält eine begrenzte Docker-Loggröße, beispielsweise:
 
@@ -314,7 +339,7 @@ logging:
 
 Das verhindert unbegrenzt wachsende JSON-Logs. Anwendungsinterne Logs und Datenbanken müssen zusätzlich separat betrachtet werden.
 
-## 12. Backups
+## 13. Backups
 
 Jeder Stack besitzt eine eigene Backup-Datei. Die allgemeine Strategie steht in [Backup und Wiederherstellung](backup-und-wiederherstellung.md).
 

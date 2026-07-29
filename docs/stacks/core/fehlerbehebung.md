@@ -210,7 +210,7 @@ docker inspect core-traefik \
   | grep traefik-dashboard
 ```
 
-## 12. Callback liefert 404
+## 12. Callback beziehungsweise Outpost-Pfad liefert 404
 
 Traefik-Logs zeigen beispielsweise:
 
@@ -223,22 +223,21 @@ Outpost-Router prüfen:
 ```bash
 docker inspect core-authentik-server \
   --format '{{range $key, $value := .Config.Labels}}{{println $key "=" $value}}{{end}}' \
+  | sort \
   | grep authentik-outpost
 ```
 
-Erforderlich:
+Der aktuelle Core-Stack enthält den Dashboard-Outpost-Router:
 
-- Host `proxy.<DOMAIN>`
-- Pfad `/outpost.goauthentik.io/`
-- Service `authentik`
-- Priorität `100`
-- keine Forward-Auth-Middleware
+### Traefik-Dashboard
 
-Nach Änderung:
-
-```bash
-docker compose config --quiet
-docker compose up -d --force-recreate authentik-server
+```text
+Router: authentik-outpost
+Host: proxy.<DOMAIN>
+Pfad: /outpost.goauthentik.io/
+Service: authentik
+Priorität: 100
+keine Forward-Auth-Middleware
 ```
 
 ## 13. Embedded Outpost funktioniert nicht

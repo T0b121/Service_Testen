@@ -20,9 +20,7 @@ Updates werden kontrolliert durchgeführt:
 Beispiel:
 
 ```dotenv
-TRAEFIK_VERSION=3.7
-AUTHENTIK_VERSION=2026.5
-POSTGRES_VERSION=18
+DIENST_VERSION=<VERSION>
 ```
 
 Diese Werte erlauben Patchupdates innerhalb der jeweiligen Linie.
@@ -96,56 +94,14 @@ docker compose ps
 docker compose logs --tail=150
 ```
 
-## 6. Authentik
+## 6. Stack-spezifische Hinweise
 
-Vor Aktualisierungen:
+Zusätzliche Prüfungen, Datenbankmigrationen und Funktionschecks werden ausschließlich in den Stack-Dokumenten gepflegt:
 
-- Release Notes der Zielversion lesen.
-- Breaking Changes prüfen.
-- Datenbankdump erstellen.
-- `authentik_secret_key` sichern.
-- PostgreSQL-Kompatibilität prüfen.
-- Migrationen beim ersten Start beobachten.
+- [Core: Betrieb](stacks/core/betrieb.md)
+- [Part-DB: Betrieb](stacks/partdb/betrieb.md)
 
-Authentik verwendet keine dauerhaft gepflegte `latest`-Linie. Eine konkrete Versionslinie ist erforderlich.
-
-## 7. Traefik
-
-Vor Aktualisierungen:
-
-- Migration Notes prüfen.
-- neue oder veraltete Optionen kontrollieren.
-- Dashboard und Forward Auth testen.
-- ACME-Produktionsvolume sichern.
-- Healthcheck kontrollieren.
-
-Die aktuelle Konfiguration verwendet `trustForwardHeader=true`. Bei einem späteren Traefik-Hauptversionswechsel muss geprüft werden, ob die Option weiterhin unterstützt wird und wie vertrauenswürdige Forwarded Headers dann konfiguriert werden.
-
-## 8. PostgreSQL
-
-Eine PostgreSQL-Hauptversion wird nicht wie ein gewöhnliches Image-Update gewechselt.
-
-Nicht einfach:
-
-```dotenv
-POSTGRES_VERSION=19
-```
-
-setzen und den vorhandenen Datenträger weiterverwenden.
-
-Für einen Hauptversionswechsel wird ein dokumentiertes Upgradeverfahren benötigt, beispielsweise:
-
-- Dump mit alter Version,
-- neue leere Datenbank,
-- Restore mit neuer Version,
-
-oder:
-
-- `pg_upgrade` nach offizieller PostgreSQL-Anleitung.
-
-Patchupdates innerhalb derselben Hauptversion sind davon zu unterscheiden.
-
-## 9. Rollback
+## 7. Rollback
 
 Vor dem Update notieren:
 
@@ -153,11 +109,11 @@ Vor dem Update notieren:
 - vorherige Image-Digests,
 - Backupzeitpunkt,
 - geänderte `.env`,
-- geänderte `compose.yml`.
+- verwendeter Git-Commit und bewusst versionierte Stackänderungen.
 
 Ein einfaches Zurücksetzen des Image-Tags reicht nicht immer aus, wenn bereits irreversible Datenbankmigrationen ausgeführt wurden. Deshalb ist das Backup entscheidend.
 
-## 10. Aufräumen
+## 8. Aufräumen
 
 Nicht mehr benötigte Images anzeigen:
 
@@ -181,7 +137,7 @@ docker system prune --volumes
 
 Vor jeder Bereinigung prüfen, ob alte Images für ein Rollback benötigt werden.
 
-## 11. Regelmäßige Kontrollen
+## 9. Regelmäßige Kontrollen
 
 ```bash
 docker compose ps
@@ -196,7 +152,4 @@ Zusätzlich:
 - Zertifikatsablauf
 - Backupalter
 - Restore-Test
-- fehlgeschlagene Authentik-Tasks
-- Datenbankgröße
-- ungewöhnliche Loginereignisse
 - verfügbare Sicherheitsupdates

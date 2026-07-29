@@ -80,7 +80,7 @@ Beim ersten Start:
 2. Authentik führt Datenbankmigrationen aus.
 3. der Worker verbindet sich mit PostgreSQL.
 4. Traefik registriert das Staging-ACME-Konto.
-5. Traefik fordert Staging-Zertifikate an.
+5. Traefik fordert Staging-Zertifikate für die aktuell bekannten TLS-Router an.
 
 Vorübergehende Authentik-Warnungen über noch nicht vorhandene Tabellen können während der Migration auftreten. Sie müssen nach Abschluss verschwinden.
 
@@ -301,9 +301,9 @@ docker inspect core-authentik-server \
   | grep authentik-outpost
 ```
 
-Erwartet sind Host `proxy.<DOMAIN>`, Pfad `/outpost.goauthentik.io/`, EntryPoint `websecure`, Service `authentik`, TLS und Priorität `100`. Die Ausgabe darf keine Forward-Auth-Middleware für diesen Router enthalten.
+Die Ausgabe enthält den Outpost-Router `authentik-outpost` für `proxy.<DOMAIN>`. Er verwendet den Pfad `/outpost.goauthentik.io/`, EntryPoint `websecure`, Service `authentik`, TLS und Priorität `100`. Er darf nicht erneut die Forward-Auth-Middleware verwenden.
 
-## 15. Abschluss
+## 14. Abschluss
 
 ```bash
 docker compose ps

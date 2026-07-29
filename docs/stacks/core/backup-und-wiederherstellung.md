@@ -8,7 +8,7 @@ Allgemeine Strategie:
 
 | Komponente | Verfahren |
 |---|---|
-| `compose.yml` | Dateikopie |
+| versionierte `compose.yml` | Git und optionale Dateikopie |
 | `.env` | verschlüsselte Dateikopie |
 | `secrets/postgresql_password` | verschlüsselte Dateikopie |
 | `secrets/authentik_secret_key` | verschlüsselte Dateikopie |
@@ -19,20 +19,28 @@ Allgemeine Strategie:
 
 Das Staging-ACME-Volume ist weniger kritisch, kann aber ebenfalls gesichert werden.
 
+Authentiks PostgreSQL-Dump enthält auch die Konfiguration später hinzugefügter Anwendungen, Gruppen, Bindings und Property Mappings. Ein aktuelles Core-Backup ist deshalb auch für die Wiederherstellung abhängiger Stacks wichtig.
+
 ## 2. Backup-Verzeichnis
 
 ```bash
 cd <PROJEKT_ROOT>/Compose/core
 
 BACKUP_TIMESTAMP="$(date -u +%Y-%m-%dT%H%M%SZ)"
-BACKUP_DIR="$PWD/backups/$BACKUP_TIMESTAMP"
+BACKUP_ROOT="$HOME/serverdienste-backups/core"
+BACKUP_DIR="$BACKUP_ROOT/$BACKUP_TIMESTAMP"
 
+umask 077
 mkdir -p \
   "$BACKUP_DIR/configuration" \
   "$BACKUP_DIR/secrets" \
   "$BACKUP_DIR/databases" \
   "$BACKUP_DIR/volumes"
+
+chmod 700 "$BACKUP_ROOT" "$BACKUP_DIR"
 ```
+
+Das Backup liegt damit bewusst außerhalb des Git-Repositorys. Die zentrale `.gitignore` muss Backup-Archive und Dumps nicht als zusätzliche Sicherheitsbarriere auffangen.
 
 ## 3. Manifest
 
@@ -45,6 +53,8 @@ mkdir -p \
   docker compose config --images
   docker compose ps
   docker volume ls | grep core_
+  printf 'Git-Commit: '
+  git rev-parse HEAD
 } > "$BACKUP_DIR/manifest.txt"
 ```
 
@@ -193,16 +203,7 @@ Das gesamte Backup mit einem geeigneten Backupwerkzeug verschlüsseln.
 
 Kein unverschlüsseltes Backup mit `.env` und `secrets/` auf fremde Systeme kopieren.
 
-Eine zufällige Backup-Passphrase kann erzeugt werden:
-
-```bash
-umask 077
-openssl rand -base64 32 \
-  | tr -d '\n' \
-  > backup-encryption-password
-```
-
-Die Passphrase getrennt vom Backup speichern.
+Für Passphrase-Erzeugung und Schlüsselablage gilt die [allgemeine Backupstrategie](../../backup-und-wiederherstellung.md#6-backup-verschlüsselung). Insbesondere wird kein Verschlüsselungsschlüssel im gerade erzeugten Backupverzeichnis abgelegt.
 
 ## 10. Wiederherstellung: Voraussetzungen
 
@@ -227,21 +228,35 @@ docker compose down
 Nur bei einer bewusst leeren Zielinstallation alte Volumes entfernen. Vorher Namen mehrfach kontrollieren:
 
 ```bash
-docker volume rm \
+for volume in \
   core_postgresql_data \
   core_authentik_data
+do
+  if docker volume inspect "$volume" >/dev/null 2>&1; then
+    docker volume rm "$volume"
+  fi
+done
 ```
 
 Das produktive ACME-Volume nicht löschen, wenn es nicht wiederhergestellt werden soll.
 
 ### 11.2 Konfiguration und Secrets
 
+Den versionierten Stack bevorzugt über den zum Backup gehörenden Git-Stand wiederherstellen. Die gesicherte `compose.yml` dient als Fallback und Vergleichskopie; sie wird nicht installationsspezifisch editiert.
+
+Lokale Konfiguration und Secrets zurückspielen:
+
 ```bash
-cp BACKUP/configuration/compose.yml .
-cp BACKUP/configuration/.env .
+cp <BACKUP_DIR>/configuration/.env .
 mkdir -p secrets
-cp -a BACKUP/secrets/. secrets/
+cp -a <BACKUP_DIR>/secrets/. secrets/
 chmod 600 .env secrets/*
+```
+
+Falls der dokumentierte Git-Stand nicht mehr verfügbar ist, kann als Fallback die gesicherte versionierte Datei verwendet werden:
+
+```bash
+cp <BACKUP_DIR>/configuration/compose.yml .
 ```
 
 ### 11.3 Volumes erzeugen
@@ -256,7 +271,7 @@ docker volume create core_authentik_data
 ```bash
 docker run --rm \
   -v core_authentik_data:/target \
-  -v /PFAD/ZUM/BACKUP/volumes:/backup:ro \
+  -v <BACKUP_DIR>/volumes:/backup:ro \
   alpine:3.24 \
   sh -c 'cd /target &&
          tar -xzf /backup/core_authentik_data.tar.gz'
@@ -284,7 +299,7 @@ docker compose exec -T postgresql \
     --no-owner \
     -U "$POSTGRES_USER" \
     -d "$POSTGRES_DB"' \
-  < /PFAD/ZUM/BACKUP/databases/authentik.dump
+  < <BACKUP_DIR>/databases/authentik.dump
 ```
 
 ### 11.7 Restliche Dienste starten
@@ -316,7 +331,7 @@ Archiv einspielen:
 ```bash
 docker run --rm \
   -v core_traefik_acme_production:/target \
-  -v /PFAD/ZUM/BACKUP/volumes:/backup:ro \
+  -v <BACKUP_DIR>/volumes:/backup:ro \
   alpine:3.24 \
   sh -c 'cd /target &&
          tar -xzf /backup/core_traefik_acme_production.tar.gz'
