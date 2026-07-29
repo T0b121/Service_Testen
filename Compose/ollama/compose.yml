@@ -1,0 +1,61 @@
+services:
+  ollama:
+    image: ollama/ollama:${OLLAMA_VERSION}
+    container_name: ollama
+    restart: unless-stopped
+
+    environment:
+      OLLAMA_KEEP_ALIVE: ${OLLAMA_KEEP_ALIVE}
+
+    expose:
+      - "11434"
+
+    volumes:
+      - ollama_data:/root/.ollama
+
+    networks:
+      - web
+
+    healthcheck:
+      test:
+        - CMD
+        - ollama
+        - list
+      start_period: 15s
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=web
+
+      - traefik.http.routers.ollama.rule=Host(`ollama.${DOMAIN}`)
+      - traefik.http.routers.ollama.entrypoints=websecure
+      - traefik.http.routers.ollama.tls=true
+      - traefik.http.routers.ollama.tls.certresolver=letsencrypt
+      - traefik.http.routers.ollama.middlewares=authentik@docker
+      - traefik.http.services.ollama.loadbalancer.server.port=11434
+
+      # Authentik-Outpost-Pfad für die externe Ollama-Adresse.
+      - traefik.http.routers.authentik-outpost-ollama.rule=Host(`ollama.${DOMAIN}`) && PathPrefix(`/outpost.goauthentik.io/`)
+      - traefik.http.routers.authentik-outpost-ollama.entrypoints=websecure
+      - traefik.http.routers.authentik-outpost-ollama.tls=true
+      - traefik.http.routers.authentik-outpost-ollama.tls.certresolver=letsencrypt
+      - traefik.http.routers.authentik-outpost-ollama.service=authentik@docker
+      - traefik.http.routers.authentik-outpost-ollama.priority=100
+
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
+
+networks:
+  web:
+    external: true
+    name: web
+
+volumes:
+  ollama_data:
+    name: ollama_data

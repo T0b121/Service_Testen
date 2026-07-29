@@ -10,3 +10,4 @@
 8. [Authentik für Part-DB einrichten](docs/stacks/partdb/authentik-einrichten.md).
 9. [Part-DB starten und prüfen](docs/stacks/partdb/erststart-und-pruefung.md).
 10. [Part-DB verwalten und absichern](docs/stacks/partdb/verwaltung.md).
+11. Optional: [Ollama vorbereiten](docs/stacks/ollama/vorbereiten.md), [Authentik für Ollama einrichten](docs/stacks/ollama/authentik-einrichten.md) und [Ollama starten und prüfen](docs/stacks/ollama/erststart-und-pruefung.md).

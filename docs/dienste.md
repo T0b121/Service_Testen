@@ -7,5 +7,6 @@ Diese Übersicht enthält nur die öffentlichen Adressen. Einrichtung, Betrieb u
 | Authentik | `https://auth.<DOMAIN>` | Anmeldung und Zugriffssteuerung |
 | Traefik-Dashboard | `https://proxy.<DOMAIN>/dashboard/` | Proxy-Verwaltung |
 | Part-DB | `https://partdb.<DOMAIN>` | Teileverwaltung |
+| Ollama | `https://ollama.<DOMAIN>` | Durch Authentik geschützte Modell-API |
 
 Für weitere öffentliche Dienste wird hier nur eine Zeile ergänzt. Die technische Beschreibung gehört in `docs/stacks/<stack>/`.

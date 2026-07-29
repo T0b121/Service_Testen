@@ -15,6 +15,7 @@ Für den Ablauf der Erstinstallation: [Schnellstart](SCHNELLSTART.md). Öffentli
 |---|---|---|---|---|
 | `core` | Traefik, Authentik Server, Authentik Worker, PostgreSQL | `https://auth.<DOMAIN>`<br>`https://proxy.<DOMAIN>/dashboard/` | Keine | `Compose/core/` |
 | `partdb` | Part-DB, MariaDB | `https://partdb.<DOMAIN>` | `core` | `Compose/partdb/` |
+| `ollama` | Ollama | `https://ollama.<DOMAIN>` über Traefik und Authentik | `core` | `Compose/ollama/` |
 
 ## Installationsprinzip
 
@@ -71,3 +72,13 @@ Die von oben nach unten abzuarbeitende Liste steht im [Schnellstart](SCHNELLSTAR
 - [API, KiCad und MCP](docs/stacks/partdb/api-kicad-und-mcp.md)
 - [Backup und Wiederherstellung](docs/stacks/partdb/backup-und-wiederherstellung.md)
 - [Fehlerbehebung](docs/stacks/partdb/fehlerbehebung.md)
+
+### Stack `ollama`
+
+- [Übersicht](docs/stacks/ollama/uebersicht.md)
+- [Vorbereiten](docs/stacks/ollama/vorbereiten.md)
+- [Authentik einrichten](docs/stacks/ollama/authentik-einrichten.md)
+- [Erststart und Prüfung](docs/stacks/ollama/erststart-und-pruefung.md)
+- [Betrieb](docs/stacks/ollama/betrieb.md)
+- [Backup und Wiederherstellung](docs/stacks/ollama/backup-und-wiederherstellung.md)
+- [Fehlerbehebung](docs/stacks/ollama/fehlerbehebung.md)
