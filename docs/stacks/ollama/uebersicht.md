@@ -59,4 +59,5 @@ Weiter mit:
 - [Vorbereiten](vorbereiten.md)
 - [Authentik einrichten](authentik-einrichten.md)
 - [Erststart und Prüfung](erststart-und-pruefung.md)
+- [Externe Python-API](externe-python-api.md)
 - [Betrieb](betrieb.md)

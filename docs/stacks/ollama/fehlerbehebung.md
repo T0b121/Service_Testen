@@ -76,7 +76,8 @@ Erwartet ist `204`.
 
 Ein externer Ollama-CLI-Client kann keinen interaktiven Authentik-Login
 durchführen. Das ist kein Grund, Traefik oder Authentik für die API zu
-umgehen; siehe [Authentik einrichten](authentik-einrichten.md#6-wichtige-einschränkung-für-externe-clients).
+umgehen. Für den vorgesehenen Service-Account- und Bearer-Token-Ablauf siehe
+[Externe Python-API](externe-python-api.md#verhalten-und-tests-nach-der-späteren-einrichtung).
 
 ## 7. TCP 11434 ist am Host erreichbar
 

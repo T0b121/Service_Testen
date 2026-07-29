@@ -70,9 +70,12 @@ Browser erhalten eine Authentik-Anmeldung; danach funktionieren Browserzugriff
 und Anfragen mit einer vorhandenen Authentik-Sitzung.
 
 Der normale Ollama-Kommandozeilenclient führt keinen interaktiven
-Authentik-Browser-Login durch. Für einen automatisierten externen Client wird
-später ein dafür geeignetes Authentik-/OAuth-fähiges Gateway oder ein
-abgesicherter Tunnel benötigt. Die API nicht durch eine Ausnahme in Traefik
-oder durch einen öffentlichen Host-Port freigeben.
+Authentik-Browser-Login durch. Ein automatisierter externer Client verwendet
+später einen eigenen Service-Account und ein kurzlebiges Bearer-JWT, das der
+vorhandene Proxy-Provider prüft. Die geplante Einrichtung und ein
+Python-Beispiel stehen unter [Externe Python-API](externe-python-api.md).
+
+Die API nicht durch eine Ausnahme in Traefik oder durch einen öffentlichen
+Host-Port freigeben.
 
 Weiter mit [Erststart und Prüfung](erststart-und-pruefung.md).

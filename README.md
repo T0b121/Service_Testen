@@ -79,6 +79,7 @@ Die von oben nach unten abzuarbeitende Liste steht im [Schnellstart](SCHNELLSTAR
 - [Vorbereiten](docs/stacks/ollama/vorbereiten.md)
 - [Authentik einrichten](docs/stacks/ollama/authentik-einrichten.md)
 - [Erststart und Prüfung](docs/stacks/ollama/erststart-und-pruefung.md)
+- [Externe Python-API](docs/stacks/ollama/externe-python-api.md)
 - [Betrieb](docs/stacks/ollama/betrieb.md)
 - [Backup und Wiederherstellung](docs/stacks/ollama/backup-und-wiederherstellung.md)
 - [Fehlerbehebung](docs/stacks/ollama/fehlerbehebung.md)

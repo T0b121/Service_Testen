@@ -56,7 +56,8 @@ https://ollama.<DOMAIN>
 
 Sie bleibt durch Authentik geschützt. Für Browserzugriff ist eine Sitzung eines
 Benutzers aus `ollama-users` erforderlich. Die Einschränkung für automatisierte
-Ollama-Clients steht unter [Authentik einrichten](authentik-einrichten.md#6-wichtige-einschränkung-für-externe-clients).
+Ollama-Clients und die vorgesehene Python-Nutzung stehen unter
+[Externe Python-API](externe-python-api.md).
 
 ## 5. Neustart und Update
 
