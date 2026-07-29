@@ -49,6 +49,20 @@ Außerdem gilt:
 - Für PostgreSQL, Authentik oder Port 8082 existiert kein Host-Portmapping.
 - Compose meldet keine Warnung über nicht gesetzte Variablen. Absichtlich escapte Container-Variablen im PostgreSQL-Healthcheck dürfen in der aufgelösten Ausgabe weiterhin als `$${POSTGRES_DB}` beziehungsweise `$${POSTGRES_USER}` erscheinen.
 
+Der Authentik-Worker läuft ausschließlich im internen Netzwerk `core_auth` und
+hat keinen allgemeinen Internetzugang. Versionsprüfung und Fehlerberichte sind
+deshalb für beide Authentik-Dienste bewusst deaktiviert; die versionierte
+`compose.yml` enthält:
+
+```text
+AUTHENTIK_ERROR_REPORTING__ENABLED: "false"
+AUTHENTIK_DISABLE_UPDATE_CHECK: "true"
+```
+
+Der Versionscheck darf für den Worker nicht aktiviert werden; er würde sonst
+wiederholt versuchen, `version.goauthentik.io` per DNS zu erreichen und dabei
+vermeidbare Fehlermeldungen erzeugen.
+
 ## 3. Starten
 
 ```bash
@@ -101,6 +115,16 @@ docker compose logs --since=15m \
 ```
 
 Erwartet nach abgeschlossener Initialisierung: keine dauerhaft wiederkehrenden Fehler. Einzelne frühe Migrationsmeldungen können im historischen Log stehen; entscheidend sind anschließend gesunde Container und keine fortlaufenden Wiederholungen.
+
+Meldungen über einen nicht auflösbaren Host `version.goauthentik.io` sind in
+dieser Installation nicht erwartbar. Sie deuten darauf hin, dass der
+Versionscheck nicht wie oben deaktiviert ist.
+
+Sobald Port 443 öffentlich erreichbar ist, erscheinen in Traefiks Access-Log
+oft automatisierte Anfragen nach Pfaden wie `.env`, `wp-config.php` oder
+`config.yml`. Das ist normaler Internet-Hintergrundverkehr. Erwartet sind für
+nicht vorhandene Pfade `404`-Antworten. Secret-Dateien und vollständige Logs
+dürfen nicht veröffentlicht oder in Supportanfragen geteilt werden.
 
 ## 6. Healthchecks
 
@@ -303,7 +327,7 @@ docker inspect core-authentik-server \
 
 Die Ausgabe enthält den Outpost-Router `authentik-outpost` für `proxy.<DOMAIN>`. Er verwendet den Pfad `/outpost.goauthentik.io/`, EntryPoint `websecure`, Service `authentik`, TLS und Priorität `100`. Er darf nicht erneut die Forward-Auth-Middleware verwenden.
 
-## 14. Abschluss
+## 15. Abschluss
 
 ```bash
 docker compose ps

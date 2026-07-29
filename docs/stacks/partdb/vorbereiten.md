@@ -223,10 +223,14 @@ Temporäres Arbeitsverzeichnis mit restriktiver Standardmaske:
 umask 077
 TMP_SAML_DIR="$(mktemp -d)"
 chmod 700 "$TMP_SAML_DIR"
-trap 'rm -rf "$TMP_SAML_DIR"' EXIT HUP INT TERM
 ```
 
-Damit werden die temporären PEM-Dateien auch bei einem abgebrochenen Schritt möglichst wieder entfernt.
+Die folgenden Schritte in derselben SSH-Sitzung ausführen. Den ausgegebenen
+Pfad nicht manuell ändern. Wenn ein Schritt fehlschlägt, die temporären Dateien
+erst prüfen und anschließend mit dem unten stehenden Aufräumbefehl gezielt
+entfernen. Ein `trap` wird bewusst nicht verwendet: Bei einer
+Schritt-für-Schritt-Ausführung oder einem Shellwechsel könnte er das
+Arbeitsverzeichnis vor dem nächsten Befehl entfernen.
 
 RSA-Schlüssel und selbstsigniertes Zertifikat erzeugen:
 
@@ -278,7 +282,6 @@ Temporäre PEM-Dateien entfernen:
 
 ```bash
 rm -rf "$TMP_SAML_DIR"
-trap - EXIT HUP INT TERM
 unset TMP_SAML_DIR DOMAIN_VALUE
 ```
 

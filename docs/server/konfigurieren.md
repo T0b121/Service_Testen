@@ -182,7 +182,53 @@ Wichtig: Veröffentlichte Docker-Ports werden über Forwarding und NAT verarbeit
 
 Host-Ports werden nur veröffentlicht, wenn ein Stack sie ausdrücklich benötigt. Die Freigaben stehen in der jeweiligen Stack-Dokumentation.
 
-## 5. Externes Docker-Netzwerk
+## 5. Zusätzliche Provider-Firewall (Netcup)
+
+Die Host-Firewall und eine im Netcup-Panel aktivierte Firewall sind zwei
+unabhängige Schutzschichten. Die erlaubte Regel `ct state established,related`
+in der Host-Firewall ersetzt daher keine Rückverkehr-Regel im Netcup-Panel.
+
+Besonders wichtig: Werden bei Netcup eigene **ausgehende** Regeln angelegt,
+gilt für nicht ausdrücklich erlaubten ausgehenden Verkehr implizit `DROP`.
+Das betrifft auch Docker-Image-Downloads und die Zeitsynchronisierung.
+
+Bei einer restriktiven Netcup-Konfiguration mit Eingangs- und Ausgangs-Policy
+`DROP` müssen mindestens diese Regeln vorhanden sein. Die Regeln sind für IPv4
+und IPv6 entsprechend anzulegen.
+
+| Richtung | Protokoll | Quellport | Zielport | Aktion | Zweck |
+|---|---|---:|---:|---|---|
+| eingehend | TCP | beliebig | `22` | ACCEPT | SSH |
+| eingehend | TCP | beliebig | `80`, `443` | ACCEPT | Web und ACME HTTP-01 |
+| ein- und ausgehend | ICMP / ICMPv6 | – | – | ACCEPT | Erreichbarkeit und Netzbetrieb |
+| ausgehend | UDP | beliebig | `53` | ACCEPT | DNS-Anfrage |
+| eingehend | UDP | `53` | beliebig | ACCEPT | DNS-Antwort |
+| ausgehend | TCP | beliebig | `53` | ACCEPT | DNS über TCP |
+| eingehend | TCP | `53` | beliebig | ACCEPT | DNS-Antwort über TCP |
+| ausgehend | UDP | beliebig | `123` | ACCEPT | NTP-Anfrage |
+| eingehend | UDP | `123` | beliebig | ACCEPT | NTP-Antwort |
+| ausgehend | TCP | beliebig | `80`, `443` | ACCEPT | Updates, Image-Downloads und ACME |
+| eingehend | TCP | `80`, `443` | beliebig | ACCEPT | Antworten auf Web-Verbindungen |
+
+Falls SMTP absichtlich unterbunden werden soll, zusätzlich vor einer etwaigen
+allgemeinen Ausgangsfreigabe TCP zu den Zielports `25`, `465` und `587` mit
+`DROP` sperren.
+
+Nach einer Änderung mindestens beide Prüfungen ausführen:
+
+```bash
+timedatectl status
+curl -4 -I --connect-timeout 15 https://registry-1.docker.io/v2/
+```
+
+Erwartet sind `System clock synchronized: yes` sowie bei Docker Hub ein
+HTTP-Status `401`. `401` bedeutet hier, dass die Registry erreichbar ist und
+lediglich eine Anmeldung verlangt.
+
+Weitere Details zur Regelreihenfolge und zu Richtungen stehen in der
+[Netcup-Firewall-Dokumentation](https://www.netcup.com/de/helpcenter/dokumentation/server/firewall).
+
+## 6. Externes Docker-Netzwerk
 
 Einmalig erstellen:
 
@@ -205,7 +251,7 @@ Name=web Driver=bridge Scope=local
 
 Das Netzwerk wird außerhalb einzelner Compose-Stacks verwaltet, damit weitere Stacks Traefik erreichen können.
 
-## 6. Zentrale `.gitignore`
+## 7. Zentrale `.gitignore`
 
 Die versionierte Datei im Repository-Root lautet im aktuellen Projektstand:
 
@@ -241,7 +287,7 @@ git check-ignore -v \
 
 Erwartet: Für jeden Pfad erscheint eine passende Regel aus der zentralen `.gitignore`. Keine Ausgabe für einen Pfad bedeutet, dass dieser nicht ignoriert wird.
 
-## 7. Erreichbarkeit nach Traefik-Start
+## 8. Erreichbarkeit nach Traefik-Start
 
 ```bash
 sudo ss -lntp | grep -E ':(80|443)\s'
@@ -255,7 +301,7 @@ curl -I http://auth.<DOMAIN>
 
 Erwartet wird `301` oder `308` und ein `Location`-Header mit der entsprechenden `https://`-Adresse. Weitere Dienste gemäß [Dienste-Übersicht](../dienste.md) einzeln prüfen.
 
-## 8. Neustarttest
+## 9. Neustarttest
 
 Nach vollständiger Einrichtung:
 

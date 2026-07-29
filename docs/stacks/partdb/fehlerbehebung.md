@@ -375,7 +375,24 @@ Für den Notfalladministrator `admin` ist das gewollt.
 
 Wenn ein anderer vorhandener lokaler Benutzer bewusst migriert werden soll, die offizielle Part-DB-Anleitung zur Konvertierung von Benutzern verwenden. Nicht den Notfalladministrator konvertieren.
 
-## 19. Ohne Part-DB-Login sind Daten sichtbar
+## 19. Part-DB-Benutzerinformationen erzeugen für SAML-Konten einen 500-Fehler
+
+Symptom im Part-DB-Log:
+
+```text
+Userinfo only works for database users!
+```
+
+Die Part-DB-Seite für Benutzerinformationen (`/<SPRACHE>/user/info`) ist für
+lokale Datenbankbenutzer ausgelegt. Bei einem per SAML angemeldeten Benutzer
+kann sie deshalb aktuell mit HTTP `500` abbrechen.
+
+Das beeinträchtigt nicht die äußere Authentik-Freigabe, die SAML-Anmeldung oder
+das Gruppenmapping. Als Funktionstest für SAML daher die Partliste und eine zur
+Rolle passende Aktion verwenden, nicht die Benutzerinformationsseite. Den
+Fehler bei einer Aktualisierung von Part-DB erneut prüfen.
+
+## 20. Ohne Part-DB-Login sind Daten sichtbar
 
 Part-DBs Benutzer `anonymous` prüfen.
 
@@ -390,7 +407,7 @@ Nach Änderung:
 
 Wenn eine bestimmte Part-DB-Version bei vollständig verbotenen Anonymous-Rechten UI-Probleme zeigt, zuerst die Release Notes beziehungsweise aktuelle Part-DB-Issues prüfen, statt Schutzrechte pauschal wieder freizugeben.
 
-## 20. Große Projekte oder Formulare schlagen fehl
+## 21. Große Projekte oder Formulare schlagen fehl
 
 PHP-Wert prüfen:
 
@@ -415,7 +432,7 @@ docker inspect partdb-server \
 
 Die versionierte Datei `config/zz-partdb.ini` muss in die FPM- und CLI-`conf.d`-Verzeichnisse eingehängt sein.
 
-## 21. REST-API, KiCad oder MCP funktioniert trotz gültigem Part-DB-Token nicht
+## 22. REST-API, KiCad oder MCP funktioniert trotz gültigem Part-DB-Token nicht
 
 In der Basiskonfiguration schützt Authentik Forward Auth auch diese Pfade.
 
@@ -427,7 +444,7 @@ Siehe:
 
 - [API, KiCad und MCP](api-kicad-und-mcp.md)
 
-## 22. Informationsanbieter können externe Dienste nicht erreichen
+## 23. Informationsanbieter können externe Dienste nicht erreichen
 
 Prüfen:
 
@@ -448,7 +465,7 @@ Mögliche Ursachen:
 
 Den letzten Punkt nicht durch eine einmalige manuelle Änderung von `compose.yml` lösen. Für env-only Provider ist eine reproduzierbare, versionierte Erweiterung des Stacks erforderlich.
 
-## 23. MariaDB-Passwort wurde in der Secret-Datei geändert
+## 24. MariaDB-Passwort wurde in der Secret-Datei geändert
 
 Ein neues `secrets/mariadb_password` ändert nicht automatisch das Passwort des bereits existierenden MariaDB-Benutzers im persistenten Datenbankvolume.
 
@@ -461,7 +478,7 @@ Part-DB kann Datenbank nicht erreichen
 
 Nicht weiter rotieren. Ursprüngliches Secret aus sicherem Backup wiederherstellen oder eine geplante Passwortrotation durchführen, bei der Datenbankbenutzer und Part-DB-Konfiguration koordiniert geändert werden.
 
-## 24. Staging-Zertifikat wird nicht vertraut
+## 25. Staging-Zertifikat wird nicht vertraut
 
 Während der Einrichtung mit Let's Encrypt Staging ist das normal.
 
@@ -475,7 +492,7 @@ Für normalen Betrieb und Maschinenclients auf Produktion wechseln:
 
 - [TLS und Zertifikate](../../tls-und-zertifikate.md)
 
-## 25. Part-DB oder MariaDB zeigt keinen Host-Port
+## 26. Part-DB oder MariaDB zeigt keinen Host-Port
 
 Das ist **kein Fehler**.
 

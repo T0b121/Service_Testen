@@ -128,6 +128,7 @@ services:
       AUTHENTIK_POSTGRESQL__PASSWORD: file:///run/secrets/postgresql_password
       AUTHENTIK_SECRET_KEY: file:///run/secrets/authentik_secret_key
       AUTHENTIK_ERROR_REPORTING__ENABLED: "false"
+      AUTHENTIK_DISABLE_UPDATE_CHECK: "true"
 
     secrets:
       - postgresql_password
@@ -186,6 +187,7 @@ services:
       AUTHENTIK_POSTGRESQL__PASSWORD: file:///run/secrets/postgresql_password
       AUTHENTIK_SECRET_KEY: file:///run/secrets/authentik_secret_key
       AUTHENTIK_ERROR_REPORTING__ENABLED: "false"
+      AUTHENTIK_DISABLE_UPDATE_CHECK: "true"
 
     secrets:
       - postgresql_password
