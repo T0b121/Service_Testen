@@ -1,0 +1,94 @@
+services:
+  open-webui:
+    image: ghcr.io/open-webui/open-webui:${OPEN_WEBUI_VERSION}
+    container_name: open-webui
+    restart: unless-stopped
+
+    environment:
+      # Öffentliche Adresse; muss vor dem ersten Start gesetzt sein.
+      WEBUI_URL: https://webui.${DOMAIN}
+      # Browseranfragen ausschließlich von der eigenen öffentlichen Oberfläche.
+      CORS_ALLOW_ORIGIN: https://webui.${DOMAIN}
+
+      # Ausschließlich die interne Ollama-Adresse im Docker-Netzwerk.
+      OLLAMA_BASE_URL: http://ollama:11434
+      ENABLE_OPENAI_API: "false"
+      ENABLE_VERSION_UPDATE_CHECK: "false"
+
+      # Lokaler Login hinter Authentik Forward Auth.
+      # Die Registrierung wird nach dem ersten Benutzer automatisch deaktiviert.
+      ENABLE_LOGIN_FORM: "true"
+      ENABLE_PASSWORD_AUTH: "true"
+      ENABLE_SIGNUP: "true"
+      ENABLE_SIGNUP_PASSWORD_CONFIRMATION: "true"
+      ENABLE_PASSWORD_VALIDATION: "true"
+      PASSWORD_VALIDATION_REGEX_PATTERN: '^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^\w\s]).{12,72}$'
+      PASSWORD_VALIDATION_HINT: Mindestens 12 Zeichen mit Groß- und Kleinbuchstaben, Zahl und Sonderzeichen.
+      ENABLE_OAUTH: "false"
+      DEFAULT_USER_ROLE: pending
+
+      # Persistenter Signierschlüssel und sichere Cookies für HTTPS.
+      WEBUI_SECRET_KEY_FILE: /run/secrets/openwebui_secret_key
+      WEBUI_SESSION_COOKIE_SECURE: "true"
+      WEBUI_AUTH_COOKIE_SECURE: "true"
+      WEBUI_SESSION_COOKIE_SAME_SITE: lax
+      WEBUI_AUTH_COOKIE_SAME_SITE: lax
+
+    secrets:
+      - openwebui_secret_key
+
+    volumes:
+      - openwebui_data:/app/backend/data
+
+    expose:
+      - "8080"
+
+    networks:
+      - web
+
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - curl --silent --fail http://localhost:8080/health | jq -ne 'input.status == true' || exit 1
+      start_period: 30s
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=web
+
+      - traefik.http.routers.open-webui.rule=Host(`webui.${DOMAIN}`)
+      - traefik.http.routers.open-webui.entrypoints=websecure
+      - traefik.http.routers.open-webui.tls=true
+      - traefik.http.routers.open-webui.tls.certresolver=letsencrypt
+      - traefik.http.routers.open-webui.middlewares=authentik@docker
+      - traefik.http.services.open-webui.loadbalancer.server.port=8080
+
+      # Authentik-Outpost-Pfad für den äußeren Zugriffsschutz.
+      - traefik.http.routers.authentik-outpost-open-webui.rule=Host(`webui.${DOMAIN}`) && PathPrefix(`/outpost.goauthentik.io/`)
+      - traefik.http.routers.authentik-outpost-open-webui.entrypoints=websecure
+      - traefik.http.routers.authentik-outpost-open-webui.tls=true
+      - traefik.http.routers.authentik-outpost-open-webui.tls.certresolver=letsencrypt
+      - traefik.http.routers.authentik-outpost-open-webui.service=authentik@docker
+      - traefik.http.routers.authentik-outpost-open-webui.priority=100
+
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
+
+networks:
+  web:
+    external: true
+    name: web
+
+volumes:
+  openwebui_data:
+    name: openwebui_data
+
+secrets:
+  openwebui_secret_key:
+    file: ./secrets/openwebui_secret_key

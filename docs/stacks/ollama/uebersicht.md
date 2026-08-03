@@ -25,9 +25,9 @@ Weitere vertrauenswürdige Container im Netzwerk web
 Ollama besitzt kein Host-Portmapping. TCP 11434 ist weder direkt am Server noch
 in der Netcup-Firewall freizugeben.
 
-Der gemeinsame Zugriff im Docker-Netzwerk `web` ist bewusst vorgesehen. Ein
-späterer Open-WebUI-Stack oder eine gezielt erweiterte Part-DB-Integration kann
-Ollama über `http://ollama:11434` direkt ansprechen. Diese interne Verbindung
+Der gemeinsame Zugriff im Docker-Netzwerk `web` ist bewusst vorgesehen. Der
+Open-WebUI-Stack und eine gezielt erweiterte Part-DB-Integration können Ollama
+über `http://ollama:11434` direkt ansprechen. Diese interne Verbindung
 umgeht Traefik und Authentik; nur vertrauenswürdige Dienste werden deshalb mit
 `web` verbunden.
 

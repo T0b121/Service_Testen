@@ -16,6 +16,7 @@ Für den Ablauf der Erstinstallation: [Schnellstart](SCHNELLSTART.md). Öffentli
 | `core` | Traefik, Authentik Server, Authentik Worker, PostgreSQL | `https://auth.<DOMAIN>`<br>`https://proxy.<DOMAIN>/dashboard/` | Keine | `Compose/core/` |
 | `partdb` | Part-DB, MariaDB | `https://partdb.<DOMAIN>` | `core` | `Compose/partdb/` |
 | `ollama` | Ollama | `https://ollama.<DOMAIN>` über Traefik und Authentik | `core` | `Compose/ollama/` |
+| `open-webui` | Open WebUI | `https://webui.<DOMAIN>` über Traefik und Authentik | `core`, `ollama` | `Compose/open-webui/` |
 
 ## Installationsprinzip
 
@@ -83,3 +84,13 @@ Die von oben nach unten abzuarbeitende Liste steht im [Schnellstart](SCHNELLSTAR
 - [Betrieb](docs/stacks/ollama/betrieb.md)
 - [Backup und Wiederherstellung](docs/stacks/ollama/backup-und-wiederherstellung.md)
 - [Fehlerbehebung](docs/stacks/ollama/fehlerbehebung.md)
+
+### Stack `open-webui`
+
+- [Übersicht](docs/stacks/open-webui/uebersicht.md)
+- [Vorbereiten](docs/stacks/open-webui/vorbereiten.md)
+- [Authentik einrichten](docs/stacks/open-webui/authentik-einrichten.md)
+- [Erststart und Prüfung](docs/stacks/open-webui/erststart-und-pruefung.md)
+- [Betrieb](docs/stacks/open-webui/betrieb.md)
+- [Backup und Wiederherstellung](docs/stacks/open-webui/backup-und-wiederherstellung.md)
+- [Fehlerbehebung](docs/stacks/open-webui/fehlerbehebung.md)

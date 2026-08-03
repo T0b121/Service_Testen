@@ -8,5 +8,6 @@ Diese Übersicht enthält nur die öffentlichen Adressen. Einrichtung, Betrieb u
 | Traefik-Dashboard | `https://proxy.<DOMAIN>/dashboard/` | Proxy-Verwaltung |
 | Part-DB | `https://partdb.<DOMAIN>` | Teileverwaltung |
 | Ollama | `https://ollama.<DOMAIN>` | Durch Authentik geschützte Modell-API |
+| Open WebUI | `https://webui.<DOMAIN>` | Browseroberfläche für Ollama hinter Authentik |
 
 Für weitere öffentliche Dienste wird hier nur eine Zeile ergänzt. Die technische Beschreibung gehört in `docs/stacks/<stack>/`.
