@@ -20,7 +20,8 @@ Forward Auth und lokalen Open-WebUI-Konten ist in
 Browser
   -> Traefik :443
   -> Open WebUI :8080
-  -> Authentik OIDC
+  -> Browser-Weiterleitung zu Authentik OIDC
+  -> Open WebUI :8080
   -> Ollama :11434
 
 Weitere vertrauenswürdige Container im Netzwerk web

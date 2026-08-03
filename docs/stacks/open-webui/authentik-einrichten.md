@@ -28,7 +28,7 @@ Open WebUI die Rolle `user`, Mitglieder von `openwebui-admin` die Rolle `admin`.
 Navigation:
 
 ```text
-Customization → Property Mappings → Create → OAuth2/OpenID Provider Scope Mapping
+Customization → Property Mappings → Create → Scope Mapping
 ```
 
 Falls noch nicht vorhanden, das Mapping anlegen:

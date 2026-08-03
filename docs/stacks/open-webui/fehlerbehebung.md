@@ -11,6 +11,9 @@ docker compose logs --tail=200 open-webui
 docker network inspect web
 ```
 
+Für die Forward-Auth-Alternative jeden `docker compose`-Befehl durch
+`docker compose -f compose.yml -f compose.local-auth.yml` ersetzen.
+
 ## 2. Container startet nicht oder ist nicht healthy
 
 ```bash

@@ -71,10 +71,19 @@ und speichern. Das versionierte Compose-Override stellt den Outpost-Pfad unter
 
 ## 5. Start mit Compose-Override
 
-Alle Compose-Befehle benötigen zusätzlich `compose.local-auth.yml`:
+Zuerst den persistenten Signierschlüssel erzeugen:
 
 ```bash
 cd <PROJEKT_ROOT>/Compose/open-webui
+mkdir -p secrets
+chmod 700 secrets
+openssl rand -base64 48 | tr -d '\n' > secrets/openwebui_secret_key
+chmod 600 secrets/openwebui_secret_key
+```
+
+Alle Compose-Befehle benötigen zusätzlich `compose.local-auth.yml`:
+
+```bash
 docker compose -f compose.yml -f compose.local-auth.yml config --quiet
 docker compose -f compose.yml -f compose.local-auth.yml up -d
 ```

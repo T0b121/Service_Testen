@@ -1,6 +1,9 @@
 # Open-WebUI-Stack: Erststart und Prüfung
 
-Vorher müssen [Vorbereiten](vorbereiten.md) und [Authentik einrichten](authentik-einrichten.md) abgeschlossen sein.
+Für die Standardkonfiguration mit OIDC müssen [Vorbereiten](vorbereiten.md)
+und [Authentik einrichten](authentik-einrichten.md) abgeschlossen sein. Für
+die Alternative mit lokalen Konten gilt stattdessen der eigene Abschnitt
+[Erststart ohne OIDC](#alternative-erststart-ohne-oidc).
 
 ## 1. Lokale Konfiguration prüfen
 
@@ -102,6 +105,9 @@ beschriebene Forward-Auth-Variante alle Compose-Befehle mit dem Override
 ausführen:
 
 ```bash
+test -s secrets/openwebui_secret_key \
+  || { echo 'Fehlt oder leer: secrets/openwebui_secret_key' >&2; exit 1; }
+docker compose -f compose.yml -f compose.local-auth.yml config --quiet
 docker compose -f compose.yml -f compose.local-auth.yml pull
 docker compose -f compose.yml -f compose.local-auth.yml up -d
 docker compose -f compose.yml -f compose.local-auth.yml ps
