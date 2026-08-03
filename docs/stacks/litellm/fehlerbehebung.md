@@ -25,19 +25,28 @@ Prüfen:
 deshalb keine URL-reservierten Zeichen enthalten. Einen neuen Wert mit
 `openssl rand -hex 32` erzeugen. Bei einer frischen, noch unbenutzten
 Installation muss anschließend auch das LiteLLM-PostgreSQL-Volume neu erzeugt
-werden, damit dessen Datenbankpasswort zum neuen `.env`-Wert passt.
+werden, damit dessen Datenbankpasswort zum neuen `.env`-Wert passt:
+
+```bash
+docker compose down
+docker volume rm litellm_postgresql_data
+docker compose up -d
+```
+
+Das Volume nur bei einer noch unbenutzten Installation löschen. Andernfalls
+das Passwort in PostgreSQL gezielt ändern oder aus einem Backup wiederherstellen.
 
 ## `/ui` zeigt keinen SSO-Login oder die Rückleitung schlägt fehl
 
 Prüfen:
 
 - OIDC-Provider `LiteLLM OIDC Provider`,
-- Gruppenbindung `litellm-admin`,
+- Gruppenbindungen `litellm-users` und `litellm-admin`,
 - `LITELLM_OIDC_CLIENT_ID` und `LITELLM_OIDC_CLIENT_SECRET` in `.env`,
 - `PROXY_BASE_URL=https://litellm.<DOMAIN>`,
 - Redirect URI in Authentik:
 
-```bash
+```text
 https://litellm.<DOMAIN>/sso/callback
 ```
 
@@ -50,10 +59,12 @@ Quelle ist die Discovery-URL
 ## Modell nicht verfügbar
 
 ```bash
-docker compose exec litellm curl -fsS http://ollama:11434/api/tags
-docker compose exec litellm \
-  curl -fsS http://localhost:4000/v1/models \
-  -H 'Authorization: Bearer <LITELLM_MASTER_KEY>'
+docker compose exec litellm /app/.venv/bin/python -c \
+  "from urllib.request import urlopen; print(urlopen('http://ollama:11434/api/tags').read().decode())"
+read -rsp 'LiteLLM-Master-Key: ' LITELLM_CHECK_KEY; echo
+docker compose exec -e LITELLM_CHECK_KEY litellm /app/.venv/bin/python -c \
+  "import os; from urllib.request import Request, urlopen; request = Request('http://localhost:4000/v1/models', headers={'Authorization': 'Bearer ' + os.environ['LITELLM_CHECK_KEY']}); print(urlopen(request).read().decode())"
+unset LITELLM_CHECK_KEY
 ```
 
 Ollama muss `qwen3:0.6b` liefern. Danach `config.yaml` auf den gleichen

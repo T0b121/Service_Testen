@@ -50,7 +50,6 @@ services:
       GENERIC_SCOPE: openid profile email litellm_role
       GENERIC_USER_ID_ATTRIBUTE: sub
       GENERIC_USER_ROLE_ATTRIBUTE: litellm_role
-      PROXY_ADMIN_ID: ${LITELLM_PROXY_ADMIN_ID:-}
 
       # Notfallzugang unter /fallback/login; nicht für den normalen SSO-Login.
       UI_USERNAME: ${LITELLM_UI_USERNAME}

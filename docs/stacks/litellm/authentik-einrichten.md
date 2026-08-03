@@ -58,7 +58,7 @@ Applications → Applications → Create with Provider
 Name: LiteLLM Administration
 Slug: litellm
 Group: KI
-Policy engine mode: ALL
+Policy engine mode: ANY
 Launch URL: https://litellm.<DOMAIN>/ui
 ```
 
@@ -91,11 +91,12 @@ Logout URI: leer
 Signing Key: authentik Self-signed Certificate
 ```
 
-Unter **Redirect URIs / Origins** einen Eintrag hinzufügen:
+Unter **Redirect URIs / Origins** diese Einträge hinzufügen:
 
 | Modus | Typ | URL |
 |---|---|---|
 | Strict | Authorization | `https://litellm.<DOMAIN>/sso/callback` |
+| Strict | Post Logout | `https://litellm.<DOMAIN>/` |
 
 #### Advanced flow settings
 
@@ -117,8 +118,9 @@ litellm_role (LiteLLM Rollen)
 ```
 
 `Subject Mode` bleibt bei `Based on the User's hashed ID`; LiteLLM verwendet
-den stabilen Claim `sub` als Benutzerkennung. Die übrigen erweiterten und
-Machine-to-Machine-Einstellungen bleiben unverändert.
+den stabilen Claim `sub` als Benutzerkennung. `Include claims in id_token`
+bleibt aus. Die übrigen erweiterten und Machine-to-Machine-Einstellungen
+bleiben unverändert.
 
 ## 4. Configure Bindings
 

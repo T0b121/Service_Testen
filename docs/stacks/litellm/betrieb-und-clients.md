@@ -11,6 +11,10 @@ für Wiederherstellungsfälle gedacht.
 Bei Verlust oder Ablösung eines Systems dessen Virtual Key widerrufen statt
 einen gemeinsamen Key weiterzuverwenden.
 
+Für produktive Maschinenclients den Key einem `Service Account` zuordnen und
+die Modellfreigabe auf die tatsächlich benötigten Modelle beschränken. Der
+Test-Key eines persönlichen Administratorkontos ist kein Ersatz dafür.
+
 ## OpenAI-kompatibler Client
 
 ```python

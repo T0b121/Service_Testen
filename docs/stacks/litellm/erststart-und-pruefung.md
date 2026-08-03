@@ -13,12 +13,15 @@ docker compose ps
 ```
 
 `litellm-postgresql` und `litellm` müssen `healthy` erreichen.
+Beim ersten Start führt LiteLLM zahlreiche Datenbankmigrationen aus; das kann
+einige Minuten dauern. Solange `litellm` noch `health: starting` zeigt, den
+Fortschritt mit `docker compose logs --tail=200 litellm` prüfen.
 
 ## 2. Interne und öffentliche Prüfungen
 
 ```bash
-docker compose exec litellm \
-  curl -fsS http://ollama:11434/api/tags
+docker compose exec litellm /app/.venv/bin/python -c \
+  "from urllib.request import urlopen; print(urlopen('http://ollama:11434/api/tags').read().decode())"
 curl -I http://litellm.<DOMAIN>
 ```
 
@@ -46,19 +49,36 @@ nur für Notfälle.
 
 ## 4. Virtual Key anlegen und API testen
 
-Im LiteLLM-Dashboard einen Virtual Key nur für `qwen3:0.6b` erzeugen. Den Key
-einmalig in einen Passwortmanager des Zielsystems übernehmen.
+Im LiteLLM-Dashboard einen Virtual Key nur für `qwen3:0.6b` erzeugen:
 
-```bash
-curl -fsS https://litellm.<DOMAIN>/v1/models \
-  -H 'Authorization: Bearer <VIRTUAL_KEY>'
-
-curl -fsS https://litellm.<DOMAIN>/v1/chat/completions \
-  -H 'Authorization: Bearer <VIRTUAL_KEY>' \
-  -H 'Content-Type: application/json' \
-  -d '{"model":"qwen3:0.6b","messages":[{"role":"user","content":"Antworte ausschließlich mit OK."}]}'
+```text
+Owned By: You (nur für den Funktionstest)
+Key Name: test-qwen3
+Models: qwen3:0.6b
+Key Type: AI APIs
 ```
 
-Ohne Header muss derselbe Endpunkt mit `401` oder `403` abgewiesen werden.
+Den Key einmalig in einen Passwortmanager übernehmen. Für ein produktives
+Drittsystem einen eigenen Key mit `Service Account` als Eigentümer erstellen.
+
+```bash
+read -rsp 'Virtual Key: ' LITELLM_TEST_KEY; echo
+
+curl -fsS https://litellm.<DOMAIN>/v1/models \
+  -H "Authorization: Bearer ${LITELLM_TEST_KEY}"
+
+curl -fsS https://litellm.<DOMAIN>/v1/chat/completions \
+  -H "Authorization: Bearer ${LITELLM_TEST_KEY}" \
+  -H 'Content-Type: application/json' \
+  -d '{"model":"qwen3:0.6b","messages":[{"role":"user","content":"Antworte ausschließlich mit OK."}]}'
+
+curl -sS -o /dev/null -w '%{http_code}\n' \
+  https://litellm.<DOMAIN>/v1/models
+
+unset LITELLM_TEST_KEY
+```
+
+Die erste Antwort enthält `qwen3:0.6b`, die zweite eine Modellantwort. Der
+Aufruf ohne Header muss mit `401` oder `403` abgewiesen werden.
 
 Weiter mit [Betrieb und Clients](betrieb-und-clients.md).
