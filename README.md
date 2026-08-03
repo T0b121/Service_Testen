@@ -17,6 +17,7 @@ Für den Ablauf der Erstinstallation: [Schnellstart](SCHNELLSTART.md). Öffentli
 | `partdb` | Part-DB, MariaDB | `https://partdb.<DOMAIN>` | `core` | `Compose/partdb/` |
 | `ollama` | Ollama | `https://ollama.<DOMAIN>` über Traefik und Authentik | `core` | `Compose/ollama/` |
 | `open-webui` | Open WebUI | `https://webui.<DOMAIN>` über Traefik und Authentik | `core`, `ollama` | `Compose/open-webui/` |
+| `litellm` | LiteLLM Proxy | `https://litellm.<DOMAIN>/v1` und `/ui` | `core`, `ollama` | `Compose/litellm/` |
 
 ## Installationsprinzip
 
@@ -95,3 +96,13 @@ Die von oben nach unten abzuarbeitende Liste steht im [Schnellstart](SCHNELLSTAR
 - [Betrieb](docs/stacks/open-webui/betrieb.md)
 - [Backup und Wiederherstellung](docs/stacks/open-webui/backup-und-wiederherstellung.md)
 - [Fehlerbehebung](docs/stacks/open-webui/fehlerbehebung.md)
+
+### Stack `litellm`
+
+- [Übersicht](docs/stacks/litellm/uebersicht.md)
+- [Vorbereiten](docs/stacks/litellm/vorbereiten.md)
+- [Authentik einrichten](docs/stacks/litellm/authentik-einrichten.md)
+- [Erststart und Prüfung](docs/stacks/litellm/erststart-und-pruefung.md)
+- [Betrieb und Clients](docs/stacks/litellm/betrieb-und-clients.md)
+- [Backup und Wiederherstellung](docs/stacks/litellm/backup-und-wiederherstellung.md)
+- [Fehlerbehebung](docs/stacks/litellm/fehlerbehebung.md)

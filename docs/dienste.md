@@ -9,5 +9,6 @@ Diese Übersicht enthält nur die öffentlichen Adressen. Einrichtung, Betrieb u
 | Part-DB | `https://partdb.<DOMAIN>` | Teileverwaltung |
 | Ollama | `https://ollama.<DOMAIN>` | Durch Authentik geschützte Modell-API |
 | Open WebUI | `https://webui.<DOMAIN>` | Browseroberfläche für Ollama hinter Authentik |
+| LiteLLM | `https://litellm.<DOMAIN>/v1` | OpenAI-kompatible Modell-API; Zugriff per LiteLLM-Virtual-Key |
 
 Für weitere öffentliche Dienste wird hier nur eine Zeile ergänzt. Die technische Beschreibung gehört in `docs/stacks/<stack>/`.

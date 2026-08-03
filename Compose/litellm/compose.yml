@@ -1,0 +1,122 @@
+services:
+  litellm-postgresql:
+    image: postgres:${POSTGRES_VERSION}
+    container_name: litellm-postgresql
+    restart: unless-stopped
+
+    environment:
+      POSTGRES_DB: ${LITELLM_POSTGRES_DB}
+      POSTGRES_USER: ${LITELLM_POSTGRES_USER}
+      POSTGRES_PASSWORD: ${LITELLM_POSTGRES_PASSWORD}
+
+    volumes:
+      - litellm_postgresql_data:/var/lib/postgresql
+
+    networks:
+      - litellm_internal
+
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - pg_isready -d "$${POSTGRES_DB}" -U "$${POSTGRES_USER}"
+      start_period: 30s
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
+
+  litellm:
+    image: ghcr.io/berriai/litellm:${LITELLM_VERSION}
+    container_name: litellm
+    restart: unless-stopped
+    command: --config /app/config.yaml --port 4000
+
+    environment:
+      DATABASE_URL: postgresql://${LITELLM_POSTGRES_USER}:${LITELLM_POSTGRES_PASSWORD}@litellm-postgresql:5432/${LITELLM_POSTGRES_DB}
+      LITELLM_MASTER_KEY: ${LITELLM_MASTER_KEY}
+      LITELLM_SALT_KEY: ${LITELLM_SALT_KEY}
+      # Native OIDC-SSO for the LiteLLM Admin UI (kostenlos bis fünf Nutzer).
+      PROXY_BASE_URL: https://litellm.${DOMAIN}
+      GENERIC_CLIENT_ID: ${LITELLM_OIDC_CLIENT_ID}
+      GENERIC_CLIENT_SECRET: ${LITELLM_OIDC_CLIENT_SECRET}
+      GENERIC_AUTHORIZATION_ENDPOINT: https://auth.${DOMAIN}/application/o/authorize/
+      GENERIC_TOKEN_ENDPOINT: https://auth.${DOMAIN}/application/o/token/
+      GENERIC_USERINFO_ENDPOINT: https://auth.${DOMAIN}/application/o/userinfo/
+      GENERIC_SCOPE: openid profile email litellm_role
+      GENERIC_USER_ID_ATTRIBUTE: sub
+      GENERIC_USER_ROLE_ATTRIBUTE: litellm_role
+      PROXY_ADMIN_ID: ${LITELLM_PROXY_ADMIN_ID:-}
+
+      # Notfallzugang unter /fallback/login; nicht für den normalen SSO-Login.
+      UI_USERNAME: ${LITELLM_UI_USERNAME}
+      UI_PASSWORD: ${LITELLM_UI_PASSWORD}
+      STORE_MODEL_IN_DB: "true"
+
+    volumes:
+      - ./config.yaml:/app/config.yaml:ro
+
+    expose:
+      - "4000"
+
+    networks:
+      - web
+      - litellm_internal
+
+    depends_on:
+      litellm-postgresql:
+        condition: service_healthy
+
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - /app/.venv/bin/python -c "from urllib.request import urlopen; urlopen('http://localhost:4000/health/liveliness', timeout=5).read()"
+      start_period: 40s
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=web
+
+      # OpenAI-kompatible Maschinen-API; LiteLLM prüft Virtual Keys.
+      - traefik.http.routers.litellm-api.rule=Host(`litellm.${DOMAIN}`) && PathPrefix(`/v1`)
+      - traefik.http.routers.litellm-api.entrypoints=websecure
+      - traefik.http.routers.litellm-api.tls=true
+      - traefik.http.routers.litellm-api.tls.certresolver=letsencrypt
+      - traefik.http.routers.litellm-api.service=litellm
+      - traefik.http.routers.litellm-api.priority=100
+
+      # UI und /sso/* werden von LiteLLM selbst per OIDC geschützt.
+      - traefik.http.routers.litellm.rule=Host(`litellm.${DOMAIN}`)
+      - traefik.http.routers.litellm.entrypoints=websecure
+      - traefik.http.routers.litellm.tls=true
+      - traefik.http.routers.litellm.tls.certresolver=letsencrypt
+      - traefik.http.routers.litellm.service=litellm
+      - traefik.http.routers.litellm.priority=10
+
+      - traefik.http.services.litellm.loadbalancer.server.port=4000
+
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
+
+networks:
+  web:
+    external: true
+    name: web
+
+  litellm_internal:
+    name: litellm_internal
+    internal: true
+
+volumes:
+  litellm_postgresql_data:
+    name: litellm_postgresql_data

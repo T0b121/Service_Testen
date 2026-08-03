@@ -12,3 +12,4 @@
 10. [Part-DB verwalten und absichern](docs/stacks/partdb/verwaltung.md).
 11. Optional: [Ollama vorbereiten](docs/stacks/ollama/vorbereiten.md), [Authentik für Ollama einrichten](docs/stacks/ollama/authentik-einrichten.md) und [Ollama starten und prüfen](docs/stacks/ollama/erststart-und-pruefung.md).
 12. Optional: [Open WebUI vorbereiten](docs/stacks/open-webui/vorbereiten.md), [Authentik für Open WebUI einrichten](docs/stacks/open-webui/authentik-einrichten.md) und [Open WebUI starten und prüfen](docs/stacks/open-webui/erststart-und-pruefung.md).
+13. Optional: [LiteLLM vorbereiten](docs/stacks/litellm/vorbereiten.md), [Authentik für LiteLLM einrichten](docs/stacks/litellm/authentik-einrichten.md) und [LiteLLM starten und prüfen](docs/stacks/litellm/erststart-und-pruefung.md).
