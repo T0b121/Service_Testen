@@ -15,17 +15,27 @@ services:
       ENABLE_OPENAI_API: "false"
       ENABLE_VERSION_UPDATE_CHECK: "false"
 
-      # Lokaler Login hinter Authentik Forward Auth.
-      # Die Registrierung wird nach dem ersten Benutzer automatisch deaktiviert.
-      ENABLE_LOGIN_FORM: "true"
-      ENABLE_PASSWORD_AUTH: "true"
-      ENABLE_SIGNUP: "true"
-      ENABLE_SIGNUP_PASSWORD_CONFIRMATION: "true"
-      ENABLE_PASSWORD_VALIDATION: "true"
-      PASSWORD_VALIDATION_REGEX_PATTERN: '^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^\w\s]).{12,72}$'
-      PASSWORD_VALIDATION_HINT: Mindestens 12 Zeichen mit Groß- und Kleinbuchstaben, Zahl und Sonderzeichen.
-      ENABLE_OAUTH: "false"
-      DEFAULT_USER_ROLE: pending
+      # Ausschließlich nativer OIDC-Login über Authentik.
+      ENABLE_LOGIN_FORM: "false"
+      ENABLE_PASSWORD_AUTH: "false"
+      ENABLE_SIGNUP: "false"
+      ENABLE_OAUTH: "true"
+      ENABLE_OAUTH_SIGNUP: "true"
+      OAUTH_AUTO_REDIRECT: "true"
+      ENABLE_OAUTH_PERSISTENT_CONFIG: "false"
+      OAUTH_CLIENT_ID: ${OPENWEBUI_OIDC_CLIENT_ID:-}
+      OAUTH_CLIENT_SECRET: ${OPENWEBUI_OIDC_CLIENT_SECRET:-}
+      OPENID_PROVIDER_URL: https://auth.${DOMAIN}/application/o/open-webui/.well-known/openid-configuration
+      OPENID_REDIRECT_URI: https://webui.${DOMAIN}/oauth/oidc/callback
+      OAUTH_SCOPES: openid email profile roles
+      OAUTH_PROVIDER_NAME: Authentik
+      OAUTH_USERNAME_CLAIM: name
+      OAUTH_EMAIL_CLAIM: email
+      OAUTH_GROUP_CLAIM: groups
+      ENABLE_OAUTH_ROLE_MANAGEMENT: "true"
+      OAUTH_ROLES_CLAIM: roles
+      OAUTH_ALLOWED_ROLES: user,admin
+      OAUTH_ADMIN_ROLES: admin
 
       # Persistenter Signierschlüssel und sichere Cookies für HTTPS.
       WEBUI_SECRET_KEY_FILE: /run/secrets/openwebui_secret_key
@@ -63,16 +73,7 @@ services:
       - traefik.http.routers.open-webui.entrypoints=websecure
       - traefik.http.routers.open-webui.tls=true
       - traefik.http.routers.open-webui.tls.certresolver=letsencrypt
-      - traefik.http.routers.open-webui.middlewares=authentik@docker
       - traefik.http.services.open-webui.loadbalancer.server.port=8080
-
-      # Authentik-Outpost-Pfad für den äußeren Zugriffsschutz.
-      - traefik.http.routers.authentik-outpost-open-webui.rule=Host(`webui.${DOMAIN}`) && PathPrefix(`/outpost.goauthentik.io/`)
-      - traefik.http.routers.authentik-outpost-open-webui.entrypoints=websecure
-      - traefik.http.routers.authentik-outpost-open-webui.tls=true
-      - traefik.http.routers.authentik-outpost-open-webui.tls.certresolver=letsencrypt
-      - traefik.http.routers.authentik-outpost-open-webui.service=authentik@docker
-      - traefik.http.routers.authentik-outpost-open-webui.priority=100
 
     logging:
       driver: json-file

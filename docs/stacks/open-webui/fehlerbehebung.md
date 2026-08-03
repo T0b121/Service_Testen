@@ -21,21 +21,22 @@ stat -c '%A %s Bytes %n' secrets/openwebui_secret_key
 
 Der Schlüssel muss vorhanden, nicht leer und `-rw-------` sein.
 
-## 3. Authentik leitet nicht zu Open WebUI weiter
+## 3. OIDC-Anmeldung schlägt fehl
 
 Prüfen:
 
 - DNS für `webui.<DOMAIN>`,
-- Proxy Provider `Open WebUI Access Provider`,
-- Bindings der Anwendung `Open WebUI Access`,
-- Zuweisung zum Authentik Embedded Outpost,
-- Outpost-Pfad:
+- OAuth2/OpenID Provider `Open WebUI OIDC Provider`,
+- Redirect URI `https://webui.<DOMAIN>/oauth/oidc/callback`,
+- Client-ID und Client-Secret in `Compose/open-webui/.env`,
+- Discovery-URL:
 
 ```bash
-curl -I https://webui.<DOMAIN>/outpost.goauthentik.io/ping
+curl -fsS https://auth.<DOMAIN>/application/o/open-webui/.well-known/openid-configuration
 ```
 
-Erwartet ist `204`.
+Erwartet ist ein JSON-Dokument. Danach die Container-Logs auf `oauth`, `oidc`
+oder `redirect` prüfen.
 
 ## 4. Authentik meldet `Anfrage wurde verweigert`
 
@@ -43,17 +44,12 @@ Der Benutzer erfüllt keine Gruppenbindung. Mitgliedschaft in
 `openwebui-users` oder `openwebui-admin` sowie `Policy engine mode: ANY`
 prüfen. Danach neu anmelden.
 
-## 5. Lokaler Open-WebUI-Login funktioniert nicht
+## 5. Rolle oder Konto stimmt nicht
 
-Der lokale Login ist unabhängig von Authentik. Prüfen:
-
-- das Konto existiert in Open WebUI,
-- das Konto ist nicht `pending` oder deaktiviert,
-- das Passwort ist korrekt,
-- die Registrierung wurde nicht vor der Anlage des ersten Kontos manuell
-  deaktiviert.
-
-Der erste Benutzer einer frischen Installation ist der lokale Administrator.
+Den Scope Mapping `Open WebUI Rollen` und seine Zuordnung zum OIDC-Provider
+prüfen. Das Mapping muss für `openwebui-users` `user` und für
+`openwebui-admin` `admin` zurückgeben. Anschließend vollständig bei Open WebUI
+und Authentik abmelden und erneut anmelden.
 
 ## 6. Keine Modelle in Open WebUI
 

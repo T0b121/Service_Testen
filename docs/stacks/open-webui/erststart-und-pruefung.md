@@ -9,6 +9,10 @@ cd <PROJEKT_ROOT>/Compose/open-webui
 
 test -s secrets/openwebui_secret_key \
   || { echo 'Fehlt oder leer: secrets/openwebui_secret_key' >&2; exit 1; }
+test -n "$(sed -n 's/^OPENWEBUI_OIDC_CLIENT_ID=//p' .env)" \
+  || { echo 'Fehlt: OPENWEBUI_OIDC_CLIENT_ID in .env' >&2; exit 1; }
+test -n "$(sed -n 's/^OPENWEBUI_OIDC_CLIENT_SECRET=//p' .env)" \
+  || { echo 'Fehlt: OPENWEBUI_OIDC_CLIENT_SECRET in .env' >&2; exit 1; }
 
 docker compose config --quiet
 ```
@@ -41,14 +45,13 @@ installiert, enthält die Antwort dessen Modellnamen.
 ```bash
 curl -I http://webui.<DOMAIN>
 curl -I https://webui.<DOMAIN>
-curl -I https://webui.<DOMAIN>/outpost.goauthentik.io/ping
 ```
 
 Erwartet:
 
 - HTTP liefert einen `308`-Redirect zu HTTPS.
-- HTTPS leitet ohne vorhandene Authentik-Sitzung zur Authentik-Anmeldung.
-- Der Outpost-Ping liefert `204`.
+- HTTPS liefert die Open-WebUI-Anmeldeseite. Die Schaltfläche beziehungsweise
+  die automatische Weiterleitung führt zur Authentik-Anmeldung.
 
 Zertifikat prüfen:
 
@@ -60,21 +63,18 @@ openssl s_client \
   | openssl x509 -noout -subject -issuer -dates
 ```
 
-## 5. Ersten lokalen Open-WebUI-Administrator anlegen
+## 5. OIDC-Anmeldung und Rollen prüfen
 
 In einem privaten Browserfenster `https://webui.<DOMAIN>` öffnen.
 
-1. Mit dem Authentik-Administratorkonto aus `openwebui-admin` anmelden.
-2. Anschließend erscheint die lokale Open-WebUI-Anmeldeseite.
-3. Ein lokales Konto mit eigener E-Mail-Adresse und starkem Passwort anlegen.
+1. Mit einem Authentik-Konto aus `openwebui-admin` anmelden.
+2. Authentik leitet zur Open-WebUI-Startseite zurück.
+3. Unter Open WebUI → Admin Panel → Users prüfen, dass das Konto die Rolle
+   `admin` erhalten hat.
 
-Der erste lokale Benutzer einer frischen Open-WebUI-Installation wird
-automatisch Administrator. Open WebUI deaktiviert danach die Registrierung
-automatisch; weitere lokale Konten werden vom Administrator verwaltet.
-
-Erst nach erfolgreicher Anlage des lokalen Administrators weitere berechtigte
-Benutzer in `openwebui-users` aufnehmen. Diese benötigen zusätzlich ein
-freigegebenes lokales Open-WebUI-Konto.
+Danach mit einem Mitglied von `openwebui-users` anmelden und die Rolle `user`
+prüfen. Ein Benutzer ohne eine dieser Gruppen darf durch Authentik nicht zur
+Anwendung autorisiert werden.
 
 Danach ein vorhandenes Modell, beispielsweise `qwen3:0.6b`, auswählen und
 eine kurze Anfrage absenden.
@@ -94,3 +94,18 @@ Erwartet:
 - TCP 8080 hat kein Host-Portmapping.
 
 Weiter mit [Betrieb](betrieb.md).
+
+## Alternative: Erststart ohne OIDC
+
+Für die in [Ohne OIDC einrichten](authentik-einrichten-ohne-oidc.md)
+beschriebene Forward-Auth-Variante alle Compose-Befehle mit dem Override
+ausführen:
+
+```bash
+docker compose -f compose.yml -f compose.local-auth.yml pull
+docker compose -f compose.yml -f compose.local-auth.yml up -d
+docker compose -f compose.yml -f compose.local-auth.yml ps
+```
+
+`https://webui.<DOMAIN>` führt dann zunächst durch Authentik und zeigt danach
+den lokalen Open-WebUI-Login. Der erste lokale Benutzer wird Administrator.

@@ -1,13 +1,8 @@
 # Authentik für Open WebUI einrichten
 
 Dieses Dokument wird nach [Vorbereiten](vorbereiten.md) und vor dem ersten
-Open-WebUI-Start durchgeführt. Authentik schützt die öffentliche Adresse mit
-einem Proxy Provider. Open WebUI verwendet zunächst einen eigenen lokalen
-Login; der Authentik-Login ist die äußere Zugriffsschranke.
-
-Der bereits angelegte Scope Mapping `Open WebUI Rollen` wird in diesem Zustand
-noch nicht verwendet. Er kann für eine spätere native OIDC-Umstellung erhalten
-bleiben.
+Open-WebUI-Start durchgeführt. Open WebUI verwendet Authentik nativ per OIDC;
+es gibt keinen lokalen Open-WebUI-Login und keinen Forward-Auth-Proxy.
 
 ## 1. Zugriffsgruppen prüfen
 
@@ -24,12 +19,39 @@ openwebui-users
 openwebui-admin
 ```
 
-Für die Ersteinrichtung das verwendete Administratorkonto ausschließlich zu
-`openwebui-admin` hinzufügen. Noch keine weiteren Benutzer in eine dieser
-Gruppen aufnehmen. Damit kann beim ersten lokalen Open-WebUI-Login niemand
-zuvorkommen und das erste Konto anlegen.
+Für die Ersteinrichtung das verwendete Administratorkonto zu
+`openwebui-admin` hinzufügen. Mitglieder von `openwebui-users` erhalten in
+Open WebUI die Rolle `user`, Mitglieder von `openwebui-admin` die Rolle `admin`.
 
-## 2. Anwendung und Proxy Provider anlegen
+## 2. Rollen-Scope-Mapping anlegen
+
+Navigation:
+
+```text
+Customization → Property Mappings → Create → OAuth2/OpenID Provider Scope Mapping
+```
+
+Falls noch nicht vorhanden, das Mapping anlegen:
+
+```text
+Name: Open WebUI Rollen
+Scope name: roles
+Expression:
+```
+
+```python
+roles = []
+if ak_is_group_member(request.user, name="openwebui-users"):
+    roles.append("user")
+if ak_is_group_member(request.user, name="openwebui-admin"):
+    roles.append("admin")
+return {"roles": roles}
+```
+
+Nur Gruppenmitglieder erhalten mindestens eine Rolle. Die Rolle `admin` wird
+von Open WebUI als Administratorrolle ausgewertet.
+
+## 3. Anwendung und OIDC-Provider anlegen
 
 Navigation:
 
@@ -40,53 +62,108 @@ Applications → Applications → Create with Provider
 ### Anwendung
 
 ```text
-Name: Open WebUI Access
-Slug: open-webui-access
+Name: Open WebUI
+Slug: open-webui
 Group: KI
 Policy engine mode: ANY
 Launch URL: https://webui.<DOMAIN>
 ```
 
-### Proxy Provider
+### OAuth2/OpenID Provider
 
-Provider-Typ und Werte:
+Die Formularfelder in der angezeigten Reihenfolge ausfüllen:
+
+#### Provider Name
 
 ```text
-Type: Proxy Provider
-Name: Open WebUI Access Provider
-Authorization flow: default-provider-authorization-implicit-consent
-Mode: Forward auth (single application)
-External host: https://webui.<DOMAIN>
+Open WebUI OIDC Provider
 ```
 
-Anwendung und Provider speichern und verbinden.
+#### Authorization Flow
 
-## 3. Gruppenbindungen eintragen
+```text
+default-provider-authorization-implicit-consent
+```
 
-An der Anwendung `Open WebUI Access` diese Bindings anlegen:
+#### Protocol settings
+
+```text
+Client Type: Confidential
+Client ID: generierten Wert beibehalten
+Client Secret: generierten Wert beibehalten
+Grant Types: nur Authorization Code
+Logout URI: leer
+Signing Key: authentik Self-signed Certificate
+```
+
+Unter **Redirect URIs / Origins** zwei Einträge hinzufügen:
+
+| Modus | Typ | URL |
+|---|---|---|
+| Strict | Authorization | `https://webui.<DOMAIN>/oauth/oidc/callback` |
+| Strict | Post Logout | `https://webui.<DOMAIN>/` |
+
+`Regex` nicht verwenden: Es würden damit mehr Rückleitungsadressen als nötig
+akzeptiert.
+
+#### Advanced flow settings
+
+```text
+Authentication Flow: leer lassen
+Invalidation Flow: default-provider-invalidation-flow (Logged out of application)
+```
+
+`default-source-authentication` ist ein Flow für externe Benutzerquellen und
+darf hier nicht ausgewählt werden.
+
+#### Advanced protocol settings
+
+Folgende Standardwerte beibehalten:
+
+```text
+Access Code Validity: minutes=1
+Access Token Validity: minutes=5
+Refresh Token Validity: days=30
+Refresh Token Threshold: hours=1
+Encryption Key: leer
+Subject Mode: Based on the User's hashed ID
+Include claims in id_token: An
+Issuer mode: Each provider has a different issuer, based on the application slug
+```
+
+Bei **Scope** diese vier Einträge auswählen:
+
+```text
+authentik default OAuth Mapping: OpenID 'openid'
+authentik default OAuth Mapping: OpenID 'email'
+authentik default OAuth Mapping: OpenID 'profile'
+Open WebUI Rollen
+```
+
+#### Machine-to-Machine authentication settings
+
+```text
+Federated OIDC Sources: leer
+Federated OAuth2/OpenID Providers: leer
+```
+
+Anwendung und Provider speichern und verbinden. Zum Abrufen der Zugangsdaten
+den gespeicherten Provider `Open WebUI OIDC Provider` über **Edit** erneut
+öffnen. Dort stehen `Client ID` und `Client Secret`. Beide Werte in
+`Compose/open-webui/.env` als `OPENWEBUI_OIDC_CLIENT_ID` beziehungsweise
+`OPENWEBUI_OIDC_CLIENT_SECRET` eintragen. Das Secret nicht in die Dokumentation
+oder in Git übernehmen.
+
+## 4. Gruppenbindungen eintragen
+
+An der Anwendung `Open WebUI` diese Bindings anlegen:
 
 | Gruppe | Order | Enabled | Negate | Timeout | Failure result |
 |---|---:|---|---|---:|---|
 | `openwebui-admin` | 0 | Ja | Nein | 30 | fail |
 | `openwebui-users` | 10 | Ja | Nein | 30 | fail |
 
-Mit `Policy engine mode: ANY` reicht eine der beiden Gruppen. Während der
-Ersteinrichtung ist nur das Administratorkonto Mitglied von
-`openwebui-admin`.
-
-## 4. Embedded Outpost zuordnen
-
-Navigation:
-
-```text
-Applications → Outposts → authentik Embedded Outpost → Edit
-```
-
-Die Anwendung `Open WebUI Access` zu den ausgewählten Anwendungen hinzufügen
-und speichern.
-
-Der versionierte Open-WebUI-Stack stellt später für diesen Provider die
-Outpost-Route unter `/outpost.goauthentik.io/` bereit.
+Mit `Policy engine mode: ANY` reicht eine der beiden Gruppen.
 
 ## 5. Lokalen Open-WebUI-Signierschlüssel erzeugen
 

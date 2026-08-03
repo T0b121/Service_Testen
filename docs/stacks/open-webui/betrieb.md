@@ -29,16 +29,15 @@ oder die Modellliste dort aktualisieren.
 
 ## 3. Zugang verwalten
 
-Der Zugriff besteht aus zwei Schichten:
+Der Zugriff wird zentral in Authentik verwaltet:
 
-| Schicht | Verwaltung |
+| Aufgabe | Verwaltung |
 |---|---|
-| Zugang zu `webui.<DOMAIN>` | Authentik-Gruppen `openwebui-users` oder `openwebui-admin` |
-| Konto und Rolle in Open WebUI | Open WebUI → Admin Panel → Users |
+| Zugang und Rolle `user` | Authentik-Gruppe `openwebui-users` |
+| Rolle `admin` | Authentik-Gruppe `openwebui-admin` |
 
-Ein Benutzer braucht beide Berechtigungen. Entfernen aus einer Authentik-Gruppe
-sperrt den äußeren Zugriff nach Ablauf der Sitzung; Deaktivieren eines lokalen
-Kontos sperrt den Open-WebUI-Login.
+Open WebUI übernimmt die Rolle beim OIDC-Login aus dem Authentik-Claim
+`roles`. Nach Gruppenänderungen muss sich der Benutzer ab- und wieder anmelden.
 
 ## 4. Neustart und Update
 
@@ -56,17 +55,9 @@ docker compose up -d
 docker compose ps
 ```
 
-Nach jedem Update Authentik-Schutz, lokalen Login und eine Modellanfrage
-prüfen.
+Nach jedem Update OIDC-Anmeldung, Rollen und eine Modellanfrage prüfen.
 
-## 5. Spätere OIDC-Umstellung
-
-Der vorbereitete Scope Mapping `Open WebUI Rollen` wird erst bei einer
-eigenständigen Umstellung auf Open-WebUI-OIDC verwendet. Dann werden der
-lokale Login und der Forward-Auth-Proxy bewusst durch eine native OIDC-
-Konfiguration ersetzt; beide Verfahren nicht gleichzeitig mischen.
-
-## 6. Regelmäßige Kontrollen
+## 5. Regelmäßige Kontrollen
 
 ```bash
 cd <PROJEKT_ROOT>/Compose/open-webui
@@ -76,5 +67,5 @@ df -h
 ```
 
 Zusätzlich Größe und Backup von `openwebui_data`, Mitglieder der Authentik-
-Gruppen, lokale Open-WebUI-Administratoren und das Produktionszertifikat
+Gruppen, OIDC-Provider und -Scope-Mapping sowie das Produktionszertifikat
 prüfen.

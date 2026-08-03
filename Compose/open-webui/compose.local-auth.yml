@@ -1,0 +1,26 @@
+services:
+  open-webui:
+    environment:
+      # Alternative zur Standardkonfiguration mit OIDC.
+      ENABLE_LOGIN_FORM: "true"
+      ENABLE_PASSWORD_AUTH: "true"
+      ENABLE_SIGNUP: "true"
+      ENABLE_SIGNUP_PASSWORD_CONFIRMATION: "true"
+      ENABLE_PASSWORD_VALIDATION: "true"
+      PASSWORD_VALIDATION_REGEX_PATTERN: '^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^\w\s]).{12,72}$'
+      PASSWORD_VALIDATION_HINT: Mindestens 12 Zeichen mit Groß- und Kleinbuchstaben, Zahl und Sonderzeichen.
+      ENABLE_OAUTH: "false"
+      ENABLE_OAUTH_SIGNUP: "false"
+      OAUTH_AUTO_REDIRECT: "false"
+      DEFAULT_USER_ROLE: pending
+
+    labels:
+      - traefik.http.routers.open-webui.middlewares=authentik@docker
+
+      # Authentik-Outpost-Pfad für den äußeren Zugriffsschutz.
+      - traefik.http.routers.authentik-outpost-open-webui.rule=Host(`webui.${DOMAIN}`) && PathPrefix(`/outpost.goauthentik.io/`)
+      - traefik.http.routers.authentik-outpost-open-webui.entrypoints=websecure
+      - traefik.http.routers.authentik-outpost-open-webui.tls=true
+      - traefik.http.routers.authentik-outpost-open-webui.tls.certresolver=letsencrypt
+      - traefik.http.routers.authentik-outpost-open-webui.service=authentik@docker
+      - traefik.http.routers.authentik-outpost-open-webui.priority=100

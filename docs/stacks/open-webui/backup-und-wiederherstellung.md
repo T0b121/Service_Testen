@@ -4,9 +4,10 @@
 
 | Daten | Speicherort | Bewertung |
 |---|---|---|
-| Open-WebUI-Datenbank, lokale Konten, Dateien und Einstellungen | Volume `openwebui_data` | erforderlich |
+| Open-WebUI-Datenbank, OIDC-Konten, Dateien und Einstellungen | Volume `openwebui_data` | erforderlich |
 | Session- und Anwendungssignierschlüssel | `secrets/openwebui_secret_key` | erforderlich, verschlüsselt sichern |
-| Proxy Provider, Gruppen und Bindings | Authentik-PostgreSQL-Backup des Core-Stacks | erforderlich |
+| OIDC-Provider, Rollen-Scope-Mapping, Gruppen und Bindings | Authentik-PostgreSQL-Backup des Core-Stacks | erforderlich |
+| OIDC-Client-ID und -Secret | lokale Datei `.env` | erforderlich, verschlüsselt sichern |
 | Modelle | Volume `ollama_data` des Ollama-Stacks | separat nach Ollama-Strategie |
 
 Das Secret und das Volume gehören nicht in Git. Ohne den Signierschlüssel
@@ -29,11 +30,11 @@ docker compose up -d
 
 ## 3. Wiederherstellung
 
-1. Core-Stack einschließlich Authentik wiederherstellen, falls die Proxy-
+1. Core-Stack einschließlich Authentik wiederherstellen, falls die OIDC-
    Konfiguration fehlt.
 2. Ollama-Stack und Netzwerk `web` prüfen.
 3. Lokale `.env` und `secrets/openwebui_secret_key` mit Modus `600`
    bereitstellen.
 4. Volume `openwebui_data` wiederherstellen.
-5. Stack starten sowie Authentik-Schutz, lokalen Administrator und
-   Modellverbindung prüfen.
+5. Stack starten sowie OIDC-Anmeldung, Administratorrolle und Modellverbindung
+   prüfen.

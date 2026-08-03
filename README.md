@@ -90,6 +90,7 @@ Die von oben nach unten abzuarbeitende Liste steht im [Schnellstart](SCHNELLSTAR
 - [Übersicht](docs/stacks/open-webui/uebersicht.md)
 - [Vorbereiten](docs/stacks/open-webui/vorbereiten.md)
 - [Authentik einrichten](docs/stacks/open-webui/authentik-einrichten.md)
+- [Alternative ohne OIDC](docs/stacks/open-webui/authentik-einrichten-ohne-oidc.md)
 - [Erststart und Prüfung](docs/stacks/open-webui/erststart-und-pruefung.md)
 - [Betrieb](docs/stacks/open-webui/betrieb.md)
 - [Backup und Wiederherstellung](docs/stacks/open-webui/backup-und-wiederherstellung.md)

@@ -51,7 +51,7 @@ cd <PROJEKT_ROOT>/Compose/open-webui
 nano .env
 ```
 
-Inhalt:
+Inhalt für die Standardkonfiguration mit Authentik-OIDC:
 
 ```dotenv
 # Domain
@@ -61,13 +61,34 @@ DOMAIN=<DOMAIN>
 # Bewusst kein latest-Tag verwenden.
 OPEN_WEBUI_VERSION=v0.11.0
 
+# Authentik-OIDC-Provider; Werte nach dessen Anlage eintragen.
+OPENWEBUI_OIDC_CLIENT_ID=<CLIENT_ID>
+OPENWEBUI_OIDC_CLIENT_SECRET=<CLIENT_SECRET>
+
 ```
 
 `DOMAIN` enthält nur die Basisdomain ohne Protokoll oder Subdomain. Daraus
 entsteht die feste öffentliche Adresse `https://webui.<DOMAIN>`.
 
 `OPEN_WEBUI_VERSION` wird bei geplanten Updates bewusst angepasst. Kein
-`latest`-Tag verwenden.
+`latest`-Tag verwenden. Die beiden OIDC-Werte stellt Authentik beim Anlegen
+des Providers bereit. Das Client-Secret ist vertraulich und bleibt ausschließlich
+in dieser lokalen Datei.
+
+### Alternative ohne OIDC
+
+Die Standardkonfiguration verwendet OIDC. Für Authentik Forward Auth mit
+lokalen Open-WebUI-Konten die zwei OIDC-Variablen aus `.env` entfernen und alle
+nachfolgenden Compose-Befehle mit dem versionierten Override ausführen:
+
+```bash
+docker compose -f compose.yml -f compose.local-auth.yml config --quiet
+```
+
+Die vollständige Provider-Konfiguration steht in
+[Ohne OIDC einrichten](authentik-einrichten-ohne-oidc.md). Nicht zwischen
+beiden Betriebsarten umschalten, solange Daten im Volume erhalten bleiben;
+dafür einen bewussten Migrations- oder Neuinstallationsschritt durchführen.
 
 Dateirechte und Git-Schutz prüfen:
 

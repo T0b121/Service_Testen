@@ -1,15 +1,17 @@
 # Open-WebUI-Stack: Übersicht
 
 Der Stack stellt die Open-WebUI-Oberfläche für den vorhandenen Ollama-Dienst
-bereit. Die öffentliche Adresse ist `https://webui.<DOMAIN>`. Der äußere
-Zugriff wird durch Authentik Forward Auth geschützt; Open WebUI verwendet
-zunächst lokale Konten und Passwörter.
+bereit. Die öffentliche Adresse ist `https://webui.<DOMAIN>`. Benutzer melden
+sich nativ per OIDC bei Authentik an; lokale Open-WebUI-Konten sind deaktiviert.
+Dies ist die Standardkonfiguration. Die alternative Kombination aus Authentik
+Forward Auth und lokalen Open-WebUI-Konten ist in
+[Ohne OIDC einrichten](authentik-einrichten-ohne-oidc.md) beschrieben.
 
 ## Dienste
 
 | Dienst | Zweck | Erreichbarkeit |
 |---|---|---|
-| `open-webui` | Browseroberfläche und Benutzerverwaltung für Modelle | extern: `https://webui.<DOMAIN>` über Traefik und Authentik Forward Auth; intern: `http://open-webui:8080` im Netzwerk `web` |
+| `open-webui` | Browseroberfläche und Benutzerverwaltung für Modelle | extern: `https://webui.<DOMAIN>` über Traefik mit Authentik-OIDC; intern: `http://open-webui:8080` im Netzwerk `web` |
 | `ollama` | Modell-API und Ausführung | intern für Open WebUI: `http://ollama:11434` |
 
 ## Architektur
@@ -17,8 +19,8 @@ zunächst lokale Konten und Passwörter.
 ```text
 Browser
   -> Traefik :443
-  -> Authentik Forward Auth
   -> Open WebUI :8080
+  -> Authentik OIDC
   -> Ollama :11434
 
 Weitere vertrauenswürdige Container im Netzwerk web
@@ -32,22 +34,20 @@ externen Docker-Netzwerk `web`.
 Browser-Anfragen akzeptiert Open WebUI nur von `https://webui.<DOMAIN>`; die
 Compose-Variable `CORS_ALLOW_ORIGIN` verhindert die sonst offene Vorgabe `*`.
 
-Die zwei Anmeldeschichten haben getrennte Aufgaben: Authentik beschränkt, wer
-die Weboberfläche überhaupt erreicht; Open WebUI ordnet danach lokale Konten
-und Rollen zu. Eine spätere, eigene Umstellung auf natives OIDC ist möglich,
-aber nicht Teil dieses ersten Betriebszustands.
+Open WebUI leitet nicht angemeldete Benutzer zu Authentik. Nach der OIDC-
+Rückleitung erstellt oder aktualisiert Open WebUI das Konto anhand der
+Authentik-Claims; die Rollen werden aus dem Claim `roles` übernommen.
 
 ## Rollen und Zugang
 
 | Authentik-Gruppe | Bedeutung | Open-WebUI-Rolle |
 |---|---|---|
-| `openwebui-users` | Zugang zur Login-Seite | keine automatische lokale Rolle |
-| `openwebui-admin` | Zugang zur Login-Seite für die Ersteinrichtung | keine automatische lokale Rolle |
+| `openwebui-users` | Zugriff auf Open WebUI | `user` |
+| `openwebui-admin` | administrative Verwaltung | `admin` |
 
-Nur Mitglieder mindestens einer dieser Gruppen passieren Authentik. Der erste
-lokale Open-WebUI-Benutzer wird zum Administrator; weitere lokale Konten werden
-in Open WebUI verwaltet. Änderungen der Authentik-Gruppen wirken nach erneutem
-Anmelden.
+Nur Mitglieder mindestens einer dieser Gruppen erhalten von Authentik eine
+zulässige Rolle. Open WebUI legt das Benutzerkonto beim ersten OIDC-Login an.
+Änderungen der Authentik-Gruppen wirken nach erneutem Anmelden.
 
 ## Voraussetzungen
 
@@ -56,9 +56,8 @@ Anmelden.
 - Das externe Docker-Netzwerk `web` existiert.
 - DNS für `webui.<DOMAIN>` zeigt auf den Server.
 - TCP 80 und 443 sind extern erreichbar.
-- Zwei lokale Secret-Dateien werden vor dem Start angelegt.
-- Für die Ersteinrichtung ist zunächst nur das Authentik-Administratorkonto in
-  `openwebui-admin` erforderlich.
+- Die lokale `.env` enthält die OIDC-Client-ID und das OIDC-Client-Secret.
+- Der lokale Signierschlüssel wird vor dem Start angelegt.
 
 ## Persistente Daten
 
@@ -66,13 +65,14 @@ Anmelden.
 |---|---|
 | `openwebui_data` | SQLite-Datenbank, hochgeladene Dateien, Einstellungen und lokale Open-WebUI-Daten |
 
-Das Volume und beide Secret-Dateien sind für eine Wiederherstellung erforderlich.
-Die Proxy-Anwendung, Gruppen und Bindings liegen im Authentik-PostgreSQL-Backup
-des Core-Stacks.
+Das Volume, der Signierschlüssel und die OIDC-Zugangsdaten sind für eine
+Wiederherstellung erforderlich. Anwendung, Provider, Gruppen, Bindings und das
+Rollen-Scope-Mapping liegen im Authentik-PostgreSQL-Backup des Core-Stacks.
 
 Weiter mit:
 
 - [Vorbereiten](vorbereiten.md)
 - [Authentik einrichten](authentik-einrichten.md)
+- [Ohne OIDC einrichten (Alternative)](authentik-einrichten-ohne-oidc.md)
 - [Erststart und Prüfung](erststart-und-pruefung.md)
 - [Betrieb](betrieb.md)
