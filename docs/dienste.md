@@ -15,6 +15,7 @@ und Fehlerbehebung stehen jeweils in der Dokumentation des zugehörigen Stacks.
 | Open WebUI | `https://webui.<DOMAIN>` | Browseroberfläche für Ollama hinter Authentik |
 | LiteLLM | `https://litellm.<DOMAIN>/v1`<br>`https://litellm.<DOMAIN>/ui` | OpenAI-kompatible Modell-API per LiteLLM-Virtual-Key; Verwaltungsoberfläche hinter Authentik |
 | SearXNG | `https://searxng.<DOMAIN>` | Metasuche hinter Authentik; internes Online-Suchwerkzeug für Open WebUI |
+| Jellyfin | `https://jellyfin.<DOMAIN>` | Medienbibliothek im Browser hinter Authentik und lokaler Jellyfin-Anmeldung |
 
 Für weitere öffentliche Dienste wird hier nur eine Zeile ergänzt. Die
 technische Beschreibung gehört in `docs/stacks/<stack>/`.

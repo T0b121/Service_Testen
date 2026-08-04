@@ -17,6 +17,7 @@ Für den Ablauf der Erstinstallation: [Schnellstart](SCHNELLSTART.md). Öffentli
 | `partdb` | Part-DB, MariaDB | `https://partdb.<DOMAIN>` | `core` | `Compose/partdb/` |
 | `ollama` | Ollama | `https://ollama.<DOMAIN>` über Traefik und Authentik | `core` | `Compose/ollama/` |
 | `searxng` | SearXNG, Valkey | `https://searxng.<DOMAIN>` über Traefik und Authentik | `core` | `Compose/searxng/` |
+| `jellyfin` | Jellyfin | `https://jellyfin.<DOMAIN>` über Traefik und Authentik | `core` | `Compose/jellyfin/` |
 | `open-webui` | Open WebUI | `https://webui.<DOMAIN>` über Traefik und Authentik | `core`, `ollama`, `searxng` | `Compose/open-webui/` |
 | `litellm` | LiteLLM Proxy | `https://litellm.<DOMAIN>/v1` und `/ui` | `core`, `ollama` | `Compose/litellm/` |
 
@@ -102,6 +103,16 @@ Die von oben nach unten abzuarbeitende Liste steht im [Schnellstart](SCHNELLSTAR
 - [Betrieb](docs/stacks/searxng/betrieb.md)
 - [Backup und Wiederherstellung](docs/stacks/searxng/backup-und-wiederherstellung.md)
 - [Fehlerbehebung](docs/stacks/searxng/fehlerbehebung.md)
+
+### Stack `jellyfin`
+
+- [Übersicht](docs/stacks/jellyfin/uebersicht.md)
+- [Vorbereiten](docs/stacks/jellyfin/vorbereiten.md)
+- [Authentik einrichten](docs/stacks/jellyfin/authentik-einrichten.md)
+- [Erststart und Prüfung](docs/stacks/jellyfin/erststart-und-pruefung.md)
+- [Betrieb](docs/stacks/jellyfin/betrieb.md)
+- [Backup und Wiederherstellung](docs/stacks/jellyfin/backup-und-wiederherstellung.md)
+- [Fehlerbehebung](docs/stacks/jellyfin/fehlerbehebung.md)
 
 ### Stack `open-webui`
 

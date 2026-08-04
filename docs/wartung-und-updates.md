@@ -106,6 +106,7 @@ Zusätzliche Prüfungen, Datenbankmigrationen und Funktionschecks werden ausschl
 - [Open WebUI: Betrieb](stacks/open-webui/betrieb.md)
 - [LiteLLM: Betrieb und Clients](stacks/litellm/betrieb-und-clients.md)
 - [SearXNG: Betrieb](stacks/searxng/betrieb.md)
+- [Jellyfin: Betrieb](stacks/jellyfin/betrieb.md)
 
 ## 7. Rollback
 

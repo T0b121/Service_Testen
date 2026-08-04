@@ -239,3 +239,4 @@ Prüfsummen und mehrere Backupgenerationen verwenden.
 - [Open WebUI: Backup und Wiederherstellung](stacks/open-webui/backup-und-wiederherstellung.md)
 - [LiteLLM: Backup und Wiederherstellung](stacks/litellm/backup-und-wiederherstellung.md)
 - [SearXNG: Backup und Wiederherstellung](stacks/searxng/backup-und-wiederherstellung.md)
+- [Jellyfin: Backup und Wiederherstellung](stacks/jellyfin/backup-und-wiederherstellung.md)

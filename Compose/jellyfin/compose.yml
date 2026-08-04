@@ -1,0 +1,66 @@
+services:
+  jellyfin:
+    image: jellyfin/jellyfin:${JELLYFIN_VERSION}
+    container_name: jellyfin
+    restart: unless-stopped
+
+    environment:
+      # Öffentliche Adresse für Links und Browser-Clients.
+      JELLYFIN_PublishedServerUrl: https://jellyfin.${DOMAIN}
+
+    volumes:
+      - jellyfin_config:/config
+      - jellyfin_cache:/cache
+      # Ausschließlich lesen: Der spätere Nextcloud-Stack schreibt Medien hier.
+      - jellyfin_media:/media:ro
+
+    expose:
+      - "8096"
+
+    networks:
+      - web
+
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=web
+
+      # Browserzugriff erst nach Authentik-Anmeldung ausliefern.
+      - traefik.http.routers.jellyfin.rule=Host(`jellyfin.${DOMAIN}`)
+      - traefik.http.routers.jellyfin.entrypoints=websecure
+      - traefik.http.routers.jellyfin.tls=true
+      - traefik.http.routers.jellyfin.tls.certresolver=letsencrypt
+      - traefik.http.routers.jellyfin.middlewares=authentik@docker
+      - traefik.http.routers.jellyfin.service=jellyfin
+
+      # Der Outpost-Pfad darf nicht erneut durch Forward Auth laufen.
+      - traefik.http.routers.authentik-outpost-jellyfin.rule=Host(`jellyfin.${DOMAIN}`) && PathPrefix(`/outpost.goauthentik.io/`)
+      - traefik.http.routers.authentik-outpost-jellyfin.entrypoints=websecure
+      - traefik.http.routers.authentik-outpost-jellyfin.tls=true
+      - traefik.http.routers.authentik-outpost-jellyfin.tls.certresolver=letsencrypt
+      - traefik.http.routers.authentik-outpost-jellyfin.service=authentik@docker
+      - traefik.http.routers.authentik-outpost-jellyfin.priority=100
+
+      - traefik.http.services.jellyfin.loadbalancer.server.port=8096
+
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
+
+networks:
+  web:
+    external: true
+    name: web
+
+volumes:
+  jellyfin_config:
+    name: jellyfin_config
+
+  jellyfin_cache:
+    name: jellyfin_cache
+
+  # Medien bleiben von Jellyfin unverändert und werden später in Nextcloud als
+  # lokaler externer Speicher schreibbar eingebunden.
+  jellyfin_media:
+    name: jellyfin_media

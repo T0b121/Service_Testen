@@ -165,7 +165,7 @@ docker compose logs --tail=150 traefik
 
 Das Produktionsvolume wird beim ersten Start automatisch angelegt. Das Staging-Volume bleibt getrennt erhalten.
 
-Die zusätzlichen Stacks Part-DB, Ollama, Open WebUI, LiteLLM und SearXNG benötigen
+Die zusätzlichen Stacks Part-DB, Ollama, Open WebUI, LiteLLM, SearXNG und Jellyfin benötigen
 dabei keine Änderung an ihrer `compose.yml` oder `.env`. Ihre Router verweisen
 bereits auf den Resolvernamen `letsencrypt`; dessen Staging-/Produktionsziel
 wird zentral im Core-Stack bestimmt.
