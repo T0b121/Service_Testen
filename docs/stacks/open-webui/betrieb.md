@@ -39,7 +39,14 @@ Der Zugriff wird zentral in Authentik verwaltet:
 Open WebUI übernimmt die Rolle beim OIDC-Login aus dem Authentik-Claim
 `roles`. Nach Gruppenänderungen muss sich der Benutzer ab- und wieder anmelden.
 
-## 4. Neustart und Update
+## 4. Online-Suche mit SearXNG
+
+Netzwerk, globale Suchmaschine, Modellprofil, Werkzeugauswahl und Chat-Test
+stehen vollständig in [Websuche mit SearXNG](websuche-mit-searxng.md).
+Die öffentliche SearXNG-Adresse ersetzt nicht die interne Query URL
+`http://searxng-internal:8080/search?q=<query>`.
+
+## 5. Neustart und Update
 
 ```bash
 cd <PROJEKT_ROOT>/Compose/open-webui
@@ -57,7 +64,7 @@ docker compose ps
 
 Nach jedem Update OIDC-Anmeldung, Rollen und eine Modellanfrage prüfen.
 
-## 5. Regelmäßige Kontrollen
+## 6. Regelmäßige Kontrollen
 
 ```bash
 cd <PROJEKT_ROOT>/Compose/open-webui

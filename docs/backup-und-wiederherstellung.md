@@ -74,13 +74,16 @@ UTC-Zeitstempel vermeiden Mehrdeutigkeiten bei Sommerzeit und Zeitzonen.
 Erstellen:
 
 ```bash
-find "$BACKUP_DIR" \
-  -type f \
-  ! -name checksums.sha256 \
-  -print0 \
-  | sort -z \
-  | xargs -0 sha256sum \
-  > "$BACKUP_DIR/checksums.sha256"
+(
+  cd "$BACKUP_DIR"
+  find . \
+    -type f \
+    ! -name checksums.sha256 \
+    -print0 \
+    | sort -z \
+    | xargs -0 -r sha256sum \
+    > checksums.sha256
+)
 ```
 
 Prüfen:
@@ -193,7 +196,7 @@ Versionsinformationen:
   docker --version
   docker compose version
   docker compose config --images
-} > manifest.txt
+} > "$BACKUP_DIR/manifest.txt"
 ```
 
 ## 11. Restore-Test
@@ -235,3 +238,4 @@ Prüfsummen und mehrere Backupgenerationen verwenden.
 - [Ollama: Backup und Wiederherstellung](stacks/ollama/backup-und-wiederherstellung.md)
 - [Open WebUI: Backup und Wiederherstellung](stacks/open-webui/backup-und-wiederherstellung.md)
 - [LiteLLM: Backup und Wiederherstellung](stacks/litellm/backup-und-wiederherstellung.md)
+- [SearXNG: Backup und Wiederherstellung](stacks/searxng/backup-und-wiederherstellung.md)

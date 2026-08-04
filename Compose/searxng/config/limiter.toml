@@ -1,0 +1,25 @@
+# SearXNG-Limiter-Grundkonfiguration.
+# Traefik ist hier bewusst nicht als vertrauenswürdiger Proxy eingetragen:
+# Das gemeinsame Docker-Netzwerk erhält je Installation ein dynamisches Subnetz.
+# Die Client-IP darf nur nach einer gezielten, installationsspezifischen Prüfung
+# der Proxy-Kette übernommen werden.
+
+[botdetection]
+ipv4_prefix = 32
+ipv6_prefix = 48
+
+trusted_proxies = [
+  "127.0.0.0/8",
+  "::1",
+]
+
+[botdetection.ip_limit]
+filter_link_local = false
+link_token = false
+
+[botdetection.ip_lists]
+block_ip = []
+# Nur das exklusive interne Client-Netz darf die JSON-Suche ohne
+# Bot-Erkennung verwenden. Öffentliche Traefik-Anfragen sind nicht enthalten.
+pass_ip = ["172.20.0.0/24"]
+pass_searxng_org = true

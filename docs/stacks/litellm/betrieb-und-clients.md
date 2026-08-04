@@ -6,7 +6,9 @@ Die Oberfläche `https://litellm.<DOMAIN>/ui` verwendet LiteLLM-OIDC gegen
 Authentik. Der Master-Key verbleibt beim Administrator. Für jedes Drittsystem
 einen separaten Virtual Key anlegen, Modellfreigaben und Limits setzen und den
 Zweck dokumentieren. Der lokale Fallback-Login unter `/fallback/login` ist nur
-für Wiederherstellungsfälle gedacht.
+für Störungen des nativen LiteLLM-OIDC-Logins gedacht. Er liegt weiterhin
+hinter Authentik Forward Auth und funktioniert daher nicht als Umgehung bei
+einem vollständigen Authentik-Ausfall.
 
 Bei Verlust oder Ablösung eines Systems dessen Virtual Key widerrufen statt
 einen gemeinsamen Key weiterzuverwenden.

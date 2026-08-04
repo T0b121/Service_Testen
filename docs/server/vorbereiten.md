@@ -18,6 +18,7 @@ Benötigt werden:
 - Docker Engine
 - Docker Compose V2 als `docker compose`
 - Git
+- jq
 - OpenSSL
 - Texteditor, beispielsweise `nano` oder `vi`
 - nftables oder eine gleichwertige Host-Firewall
@@ -81,6 +82,7 @@ sudo apt install -y \
   ca-certificates \
   curl \
   git \
+  jq \
   nano \
   openssl \
   nftables

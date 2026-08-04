@@ -55,6 +55,7 @@ services:
 
     networks:
       - web
+      - searxng_clients
 
     healthcheck:
       test:
@@ -85,6 +86,11 @@ networks:
   web:
     external: true
     name: web
+
+  # Wird durch den SearXNG-Stack angelegt; nur für dessen interne JSON-Suche.
+  searxng_clients:
+    external: true
+    name: searxng_clients
 
 volumes:
   openwebui_data:

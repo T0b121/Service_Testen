@@ -33,7 +33,8 @@ widerrufbarer Virtual Key mit passender Modellfreigabe ausgestellt.
 
 LiteLLM verwendet für `/ui` natives OIDC mit Authentik. Laut LiteLLM ist dieses
 Admin-UI-SSO seit Version 1.76.0 bis zu fünf Nutzer kostenlos. Der lokale
-Fallback-Login bleibt ausschließlich für Wiederherstellungsfälle verfügbar.
+Fallback-Login hilft nur bei einer Störung des LiteLLM-OIDC-Logins; die äußere
+Authentik-Forward-Auth-Schicht schützt auch diesen Pfad.
 Zusätzlich schützt Authentik Forward Auth alle Nicht-API-Pfade bereits vor der
 Auslieferung durch LiteLLM. Die API `/v1` ist davon ausgenommen und prüft nur
 LiteLLM-Virtual-Keys; der Healthcheck des Containers bleibt auf `localhost`

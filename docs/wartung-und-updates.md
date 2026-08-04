@@ -23,9 +23,11 @@ Beispiel:
 DIENST_VERSION=<VERSION>
 ```
 
-Diese Werte erlauben Patchupdates innerhalb der jeweiligen Linie.
-
-Ein `docker compose pull` kann daher ein neueres Image laden, obwohl die `.env` unverändert ist.
+Ob ein Wert Patchupdates erlaubt, hängt vom verwendeten Tag ab. Ein
+Versionslinientag wie `3.7` kann beim nächsten `docker compose pull` ein neues
+`3.7.x`-Image laden. Ein vollständiger Tag wie `v1.95.0` oder
+`2026.8.4-c63835bd2` bleibt dagegen unverändert, bis er bewusst in `.env`
+angepasst wird.
 
 Aktuelle Image-IDs dokumentieren:
 
@@ -103,6 +105,7 @@ Zusätzliche Prüfungen, Datenbankmigrationen und Funktionschecks werden ausschl
 - [Ollama: Betrieb](stacks/ollama/betrieb.md)
 - [Open WebUI: Betrieb](stacks/open-webui/betrieb.md)
 - [LiteLLM: Betrieb und Clients](stacks/litellm/betrieb-und-clients.md)
+- [SearXNG: Betrieb](stacks/searxng/betrieb.md)
 
 ## 7. Rollback
 

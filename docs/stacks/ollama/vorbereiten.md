@@ -10,7 +10,7 @@ Vorher abschließen:
 ```bash
 cd <PROJEKT_ROOT>
 
-find Compose/ollama -maxdepth 2 -type f -print | sort
+git ls-files 'Compose/ollama/*' | sort
 ```
 
 Erwartet:

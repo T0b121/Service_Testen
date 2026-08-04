@@ -26,7 +26,7 @@ Für den normalen Betrieb wird empfohlen, den Core-Stack vorher auf öffentlich 
 ```bash
 cd <PROJEKT_ROOT>
 
-find Compose/partdb -maxdepth 3 -type f -print | sort
+git ls-files 'Compose/partdb/*' | sort
 ```
 
 Erwartet:

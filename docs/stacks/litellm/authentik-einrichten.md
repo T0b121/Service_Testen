@@ -150,8 +150,10 @@ Failure result: fail
 in einer der beiden Gruppen genügt. Administratoren erhalten `proxy_admin`,
 normale Mitglieder `internal_user`.
 
-Anwendung und Provider erstellen. Es ist **keine** Outpost-Zuordnung nötig,
-weil LiteLLM selbst OIDC nutzt und kein Authentik-Proxy-Provider verwendet.
+Anwendung und Provider erstellen. Für diese OIDC-Anwendung ist keine
+Outpost-Zuordnung nötig, weil LiteLLM den OIDC-Ablauf selbst verarbeitet. Nur
+die im nächsten Abschnitt angelegte Forward-Auth-Anwendung wird später dem
+Embedded Outpost zugeordnet.
 
 ## 5. Browserzugriff per Forward Auth absichern
 

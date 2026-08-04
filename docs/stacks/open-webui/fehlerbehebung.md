@@ -66,7 +66,14 @@ docker compose exec ollama ollama list
 Beide Container müssen im Netzwerk `web` sein. `OLLAMA_BASE_URL` darf nicht
 auf `localhost` oder die externe HTTPS-Adresse zeigen.
 
-## 7. TCP 8080 ist am Host erreichbar
+## 7. Websuche fehlt oder liefert keine Ergebnisse
+
+Netzwerk, SearXNG-Endpunkt, globale Einstellungen und Modellfreigaben werden
+gemeinsam unter
+[Websuche mit SearXNG: Fehlerbehebung](websuche-mit-searxng.md#6-fehlerbehebung)
+geprüft.
+
+## 8. TCP 8080 ist am Host erreichbar
 
 ```bash
 sudo ss -lntp | grep -E ':(8080)\s' || true
@@ -75,7 +82,7 @@ docker compose config
 
 Die Compose-Datei darf nur `expose: 8080` enthalten, kein `ports:`-Mapping.
 
-## 8. CORS-Warnung im Startprotokoll
+## 9. CORS-Warnung im Startprotokoll
 
 `CORS_ALLOW_ORIGIN` muss auf die öffentliche Adresse begrenzt sein:
 

@@ -1,0 +1,104 @@
+services:
+  searxng:
+    image: docker.io/searxng/searxng:${SEARXNG_VERSION}
+    container_name: searxng
+    restart: unless-stopped
+
+    environment:
+      SEARXNG_SECRET: ${SEARXNG_SECRET}
+      SEARXNG_BASE_URL: https://searxng.${DOMAIN}/
+      SEARXNG_VALKEY_URL: valkey://searxng-valkey:6379/0
+      # Die versionierte, schreibgeschützte settings.yml darf nicht gechownt werden.
+      FORCE_OWNERSHIP: "false"
+
+    volumes:
+      - ./config/settings.yml:/etc/searxng/settings.yml:ro
+      - ./config/limiter.toml:/etc/searxng/limiter.toml:ro
+      - searxng_cache:/var/cache/searxng
+
+    expose:
+      - "8080"
+
+    networks:
+      web:
+      searxng_internal:
+      searxng_clients:
+        aliases:
+          # Eindeutiges Ziel für interne Suchclients; vermeidet die
+          # gleichnamige SearXNG-Adresse im gemeinsamen web-Netz.
+          - searxng-internal
+
+    depends_on:
+      searxng-valkey:
+        condition: service_started
+
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=web
+
+      # Öffentliche Oberfläche nur nach einer Authentik-Anmeldung ausliefern.
+      - traefik.http.routers.searxng.rule=Host(`searxng.${DOMAIN}`)
+      - traefik.http.routers.searxng.entrypoints=websecure
+      - traefik.http.routers.searxng.tls=true
+      - traefik.http.routers.searxng.tls.certresolver=letsencrypt
+      - traefik.http.routers.searxng.middlewares=authentik@docker
+      - traefik.http.routers.searxng.service=searxng
+
+      # Der Outpost-Pfad darf nicht erneut durch Forward Auth laufen.
+      - traefik.http.routers.authentik-outpost-searxng.rule=Host(`searxng.${DOMAIN}`) && PathPrefix(`/outpost.goauthentik.io/`)
+      - traefik.http.routers.authentik-outpost-searxng.entrypoints=websecure
+      - traefik.http.routers.authentik-outpost-searxng.tls=true
+      - traefik.http.routers.authentik-outpost-searxng.tls.certresolver=letsencrypt
+      - traefik.http.routers.authentik-outpost-searxng.service=authentik@docker
+      - traefik.http.routers.authentik-outpost-searxng.priority=100
+
+      - traefik.http.services.searxng.loadbalancer.server.port=8080
+
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
+
+  searxng-valkey:
+    image: docker.io/valkey/valkey:${VALKEY_VERSION}
+    container_name: searxng-valkey
+    restart: unless-stopped
+    command: valkey-server --save 30 1 --loglevel warning
+
+    volumes:
+      - searxng_valkey_data:/data
+
+    networks:
+      - searxng_internal
+
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
+
+networks:
+  web:
+    external: true
+    name: web
+
+  searxng_internal:
+    name: searxng_internal
+    internal: true
+
+  # Ausschließlich für interne Suchclients wie Open WebUI.
+  # Das feste Subnetz wird in limiter.toml gezielt freigestellt.
+  searxng_clients:
+    name: searxng_clients
+    internal: true
+    ipam:
+      config:
+        - subnet: 172.20.0.0/24
+
+volumes:
+  searxng_cache:
+    name: searxng_cache
+
+  searxng_valkey_data:
+    name: searxng_valkey_data

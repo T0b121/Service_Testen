@@ -16,8 +16,15 @@ Für den Ablauf der Erstinstallation: [Schnellstart](SCHNELLSTART.md). Öffentli
 | `core` | Traefik, Authentik Server, Authentik Worker, PostgreSQL | `https://auth.<DOMAIN>`<br>`https://proxy.<DOMAIN>/dashboard/` | Keine | `Compose/core/` |
 | `partdb` | Part-DB, MariaDB | `https://partdb.<DOMAIN>` | `core` | `Compose/partdb/` |
 | `ollama` | Ollama | `https://ollama.<DOMAIN>` über Traefik und Authentik | `core` | `Compose/ollama/` |
-| `open-webui` | Open WebUI | `https://webui.<DOMAIN>` über Traefik und Authentik | `core`, `ollama` | `Compose/open-webui/` |
+| `searxng` | SearXNG, Valkey | `https://searxng.<DOMAIN>` über Traefik und Authentik | `core` | `Compose/searxng/` |
+| `open-webui` | Open WebUI | `https://webui.<DOMAIN>` über Traefik und Authentik | `core`, `ollama`, `searxng` | `Compose/open-webui/` |
 | `litellm` | LiteLLM Proxy | `https://litellm.<DOMAIN>/v1` und `/ui` | `core`, `ollama` | `Compose/litellm/` |
+
+Wer SearXNG als Online-Suchwerkzeug in Open WebUI verwenden will, arbeitet die
+Anleitung unter
+[Open WebUI: Websuche mit SearXNG](docs/stacks/open-webui/websuche-mit-searxng.md)
+ab. Eine erreichbare SearXNG-Webseite allein reicht für das Modellwerkzeug
+`search_web` nicht aus.
 
 ## Installationsprinzip
 
@@ -86,6 +93,16 @@ Die von oben nach unten abzuarbeitende Liste steht im [Schnellstart](SCHNELLSTAR
 - [Backup und Wiederherstellung](docs/stacks/ollama/backup-und-wiederherstellung.md)
 - [Fehlerbehebung](docs/stacks/ollama/fehlerbehebung.md)
 
+### Stack `searxng`
+
+- [Übersicht](docs/stacks/searxng/uebersicht.md)
+- [Vorbereiten](docs/stacks/searxng/vorbereiten.md)
+- [Authentik einrichten](docs/stacks/searxng/authentik-einrichten.md)
+- [Erststart und Prüfung](docs/stacks/searxng/erststart-und-pruefung.md)
+- [Betrieb](docs/stacks/searxng/betrieb.md)
+- [Backup und Wiederherstellung](docs/stacks/searxng/backup-und-wiederherstellung.md)
+- [Fehlerbehebung](docs/stacks/searxng/fehlerbehebung.md)
+
 ### Stack `open-webui`
 
 - [Übersicht](docs/stacks/open-webui/uebersicht.md)
@@ -93,6 +110,7 @@ Die von oben nach unten abzuarbeitende Liste steht im [Schnellstart](SCHNELLSTAR
 - [Authentik einrichten](docs/stacks/open-webui/authentik-einrichten.md)
 - [Alternative ohne OIDC](docs/stacks/open-webui/authentik-einrichten-ohne-oidc.md)
 - [Erststart und Prüfung](docs/stacks/open-webui/erststart-und-pruefung.md)
+- [Websuche mit SearXNG](docs/stacks/open-webui/websuche-mit-searxng.md)
 - [Betrieb](docs/stacks/open-webui/betrieb.md)
 - [Backup und Wiederherstellung](docs/stacks/open-webui/backup-und-wiederherstellung.md)
 - [Fehlerbehebung](docs/stacks/open-webui/fehlerbehebung.md)

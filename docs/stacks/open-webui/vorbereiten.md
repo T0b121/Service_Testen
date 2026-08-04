@@ -4,18 +4,20 @@ Vorher abschließen:
 
 - [Core-Stack: Erststart und Prüfung](../core/erststart-und-pruefung.md)
 - [Ollama-Stack: Erststart und Prüfung](../ollama/erststart-und-pruefung.md)
+- [SearXNG-Stack: Erststart und Prüfung](../searxng/erststart-und-pruefung.md)
 
 ## 1. Versionierte Dateien prüfen
 
 ```bash
 cd <PROJEKT_ROOT>
 
-find Compose/open-webui -maxdepth 3 -type f -print | sort
+git ls-files 'Compose/open-webui/*' | sort
 ```
 
 Erwartet:
 
 ```text
+Compose/open-webui/compose.local-auth.yml
 Compose/open-webui/compose.yml
 ```
 
@@ -36,12 +38,15 @@ nicht verwendetem IPv6 darf die IPv6-Abfrage ohne Ausgabe bleiben.
 ```bash
 docker network inspect web \
   --format 'Name={{.Name}} Driver={{.Driver}} Scope={{.Scope}}'
+docker network inspect searxng_clients \
+  --format 'Name={{.Name}} Driver={{.Driver}} Scope={{.Scope}} Internal={{.Internal}}'
 ```
 
 Erwartet:
 
 ```text
 Name=web Driver=bridge Scope=local
+Name=searxng_clients Driver=bridge Scope=local Internal=true
 ```
 
 ## 4. Lokale `.env` anlegen

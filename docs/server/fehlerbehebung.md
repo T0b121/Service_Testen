@@ -54,7 +54,7 @@ Nach Gruppenänderung vollständig neu anmelden.
 Wenn `sudo nft` funktioniert, liegt `/usr/sbin` wahrscheinlich nicht im Benutzer-PATH.
 
 ```bash
-sudo command -v nft
+sudo sh -c 'command -v nft'
 sudo nft --version
 ```
 
@@ -119,10 +119,10 @@ Belegenden Dienst kontrolliert stoppen oder Architektur anpassen.
 ## 10. DNS zeigt auf falsche Adresse
 
 ```bash
-getent ahostsv4 <ADRESSE>
+getent ahostsv4 <HOSTNAME>
 
 # nur bei bewusst verwendetem IPv6:
-getent ahostsv6 <ADRESSE>
+getent ahostsv6 <HOSTNAME>
 ```
 
 Die öffentlichen Adressen stehen in der [Dienste-Übersicht](../dienste.md). Bei einem neuen Dienst wird dort nur eine Zeile ergänzt.
@@ -143,8 +143,8 @@ Mögliche Ursache: Ein AAAA-Eintrag zeigt auf nicht erreichbares IPv6.
 Extern prüfen:
 
 ```bash
-curl -4 -I http://<ADRESSE>
-curl -6 -I http://<ADRESSE>
+curl -4 -I http://<HOSTNAME>
+curl -6 -I http://<HOSTNAME>
 ```
 
 AAAA korrigieren oder entfernen, falls IPv6 nicht betrieben wird.

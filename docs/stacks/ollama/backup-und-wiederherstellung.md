@@ -25,20 +25,31 @@ Backup-Manifest gespeichert werden.
 
 ## 3. Volume sichern
 
-Vor einer konsistenten Sicherung den Stack anhalten:
+`BACKUP_DIR` wie in der projektweiten
+[Backup-Strategie](../../backup-und-wiederherstellung.md#4-zeitstempel-und-arbeitsvariablen)
+setzen. Vor einer konsistenten Sicherung den Stack anhalten und das Volume
+archivieren:
 
 ```bash
 cd <PROJEKT_ROOT>/Compose/ollama
+test -n "${BACKUP_DIR:-}" || { echo 'BACKUP_DIR ist nicht gesetzt' >&2; exit 1; }
+umask 077
+mkdir -p "$BACKUP_DIR/configuration" "$BACKUP_DIR/volumes"
+cp .env "$BACKUP_DIR/configuration/.env"
+
 docker compose stop ollama
+
+docker run --rm \
+  -v ollama_data:/source:ro \
+  -v "$BACKUP_DIR/volumes:/backup" \
+  alpine:3.22 \
+  tar -C /source -czf /backup/ollama_data.tar.gz .
+
+docker compose start ollama
 ```
 
-Die Sicherung erfolgt außerhalb des Repositorys nach der projektweiten
-[Backup-Strategie](../../backup-und-wiederherstellung.md). Danach wieder
-starten:
-
-```bash
-docker compose up -d
-```
+Das Archiv enthält den privaten Ollama-Dienstschlüssel und muss verschlüsselt
+gespeichert werden.
 
 ## 4. Wiederherstellung
 
@@ -49,6 +60,26 @@ Reihenfolge:
 3. Ollama-Stack mit derselben `.env` bereitstellen.
 4. `ollama_data` aus dem Backup wiederherstellen oder benötigte Modelle neu laden.
 5. Gruppenbindung in Authentik und externen Zugriff prüfen.
+
+Auf einer neuen Zielinstallation darf das folgende Beispiel nur verwendet
+werden, wenn `ollama_data` noch nicht existiert:
+
+```bash
+cd <PROJEKT_ROOT>/Compose/ollama
+test -n "${BACKUP_DIR:-}" || { echo 'BACKUP_DIR ist nicht gesetzt' >&2; exit 1; }
+docker compose down
+if docker volume inspect ollama_data >/dev/null 2>&1; then
+  echo 'Volume ollama_data existiert bereits; Restore-Ziel zuerst bewusst klären.' >&2
+  exit 1
+fi
+docker volume create ollama_data
+docker run --rm \
+  -v ollama_data:/target \
+  -v "$BACKUP_DIR/volumes:/backup:ro" \
+  alpine:3.22 \
+  tar -C /target -xzf /backup/ollama_data.tar.gz
+docker compose up -d
+```
 
 Danach mindestens ausführen:
 

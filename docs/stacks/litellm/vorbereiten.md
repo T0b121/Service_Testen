@@ -41,7 +41,7 @@ LITELLM_SALT_KEY=<ZUFÄLLIGER_SALT_KEY>
 LITELLM_OIDC_CLIENT_ID=<CLIENT_ID>
 LITELLM_OIDC_CLIENT_SECRET=<CLIENT_SECRET>
 
-# Notfallzugang unter /fallback/login; der normale Zugang zu /ui nutzt OIDC.
+# Lokaler LiteLLM-Fallback hinter Authentik Forward Auth; kein Authentik-Notzugang.
 LITELLM_UI_USERNAME=litellm-admin
 LITELLM_UI_PASSWORD=<ZUFÄLLIGES_UI_PASSWORT>
 ```

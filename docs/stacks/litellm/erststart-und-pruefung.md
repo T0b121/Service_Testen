@@ -47,7 +47,8 @@ https://litellm.<DOMAIN>/ui
 
 Mitglieder der Authentik-Gruppe `litellm-admin` erhalten beim OIDC-Login
 automatisch die Rolle `proxy_admin`. Der Zugang unter `/fallback/login` ist
-nur für Notfälle.
+nur für Fehler des LiteLLM-OIDC-Logins und bleibt hinter Authentik Forward
+Auth.
 
 ## 4. Virtual Key anlegen und API testen
 

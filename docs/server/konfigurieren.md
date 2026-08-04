@@ -27,13 +27,13 @@ Nur einen AAAA-Eintrag setzen, wenn IPv6 vom Internet aus tatsächlich bis zum S
 Prüfung:
 
 ```bash
-getent ahostsv4 <ADRESSE>
+getent ahostsv4 <HOSTNAME>
 ```
 
 Bei konfiguriertem IPv6:
 
 ```bash
-getent ahostsv6 <ADRESSE>
+getent ahostsv6 <HOSTNAME>
 ```
 
 Erwartet: Die verwendeten Namen liefern die für diesen Server vorgesehenen öffentlichen Adressen.
@@ -198,7 +198,7 @@ und IPv6 entsprechend anzulegen.
 
 | Richtung | Protokoll | Quellport | Zielport | Aktion | Zweck |
 |---|---|---:|---:|---|---|
-| eingehend | TCP | beliebig | `22` | ACCEPT | SSH |
+| eingehend | TCP | beliebig | `<SSH_PORT>` | ACCEPT | SSH |
 | eingehend | TCP | beliebig | `80`, `443` | ACCEPT | Web und ACME HTTP-01 |
 | ein- und ausgehend | ICMP / ICMPv6 | – | – | ACCEPT | Erreichbarkeit und Netzbetrieb |
 | ausgehend | UDP | beliebig | `53` | ACCEPT | DNS-Anfrage |

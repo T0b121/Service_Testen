@@ -165,7 +165,7 @@ docker compose logs --tail=150 traefik
 
 Das Produktionsvolume wird beim ersten Start automatisch angelegt. Das Staging-Volume bleibt getrennt erhalten.
 
-Die zusätzlichen Stacks Part-DB, Ollama, Open WebUI und LiteLLM benötigen
+Die zusätzlichen Stacks Part-DB, Ollama, Open WebUI, LiteLLM und SearXNG benötigen
 dabei keine Änderung an ihrer `compose.yml` oder `.env`. Ihre Router verweisen
 bereits auf den Resolvernamen `letsencrypt`; dessen Staging-/Produktionsziel
 wird zentral im Core-Stack bestimmt.
@@ -220,11 +220,13 @@ Weitere öffentliche Dienste gemäß [Dienste-Übersicht](dienste.md):
 
 ```bash
 openssl s_client \
-  -connect <ADRESSE>:443 \
-  -servername <ADRESSE> \
+  -connect <HOSTNAME>:443 \
+  -servername <HOSTNAME> \
   </dev/null 2>/dev/null \
   | openssl x509 -noout -subject -issuer -dates
 ```
+
+`<HOSTNAME>` ist dabei nur der DNS-Name ohne `https://` und ohne Pfad.
 
 Zusätzlich im Browser beziehungsweise Client prüfen:
 

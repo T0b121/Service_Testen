@@ -87,6 +87,7 @@ eine kurze Anfrage absenden.
 ```bash
 docker compose logs --since=15m open-webui
 docker network inspect web
+docker network inspect searxng_clients
 sudo ss -lntp | grep -E ':(8080)\s' || true
 ```
 
@@ -94,9 +95,12 @@ Erwartet:
 
 - keine wiederkehrenden Start- oder Datenbankfehler,
 - `open-webui` und `ollama` sind im Netzwerk `web`,
+- `open-webui` und `searxng` sind im Netzwerk `searxng_clients`,
 - TCP 8080 hat kein Host-Portmapping.
 
-Weiter mit [Betrieb](betrieb.md).
+Für die Online-Suche als Nächstes
+[Websuche mit SearXNG](websuche-mit-searxng.md) einrichten. Ohne Websuche geht
+es direkt mit [Betrieb](betrieb.md) weiter.
 
 ## Alternative: Erststart ohne OIDC
 

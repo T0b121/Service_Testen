@@ -24,13 +24,20 @@ Browser
   -> Open WebUI :8080
   -> Ollama :11434
 
+Open WebUI
+  -> searxng-internal :8080 im Netzwerk searxng_clients
+  -> SearXNG-Suchergebnisse als search_web-Werkzeug
+
 Weitere vertrauenswürdige Container im Netzwerk web
   -> http://ollama:11434
 ```
 
 Open WebUI und Ollama haben keine Host-Portmappings. Nur Traefik veröffentlicht
 TCP 80 und 443. Die Verbindung von Open WebUI zu Ollama bleibt vollständig im
-externen Docker-Netzwerk `web`.
+externen Docker-Netzwerk `web`. Für die Online-Suche ist Open WebUI zusätzlich
+am internen Netzwerk `searxng_clients` angeschlossen. Der Alias
+`searxng-internal` verhindert, dass interne Suchanfragen versehentlich über das
+gemeinsame Proxy-Netz laufen.
 
 Browser-Anfragen akzeptiert Open WebUI nur von `https://webui.<DOMAIN>`; die
 Compose-Variable `CORS_ALLOW_ORIGIN` verhindert die sonst offene Vorgabe `*`.
@@ -54,6 +61,8 @@ zulässige Rolle. Open WebUI legt das Benutzerkonto beim ersten OIDC-Login an.
 
 - Der Core-Stack läuft mit Traefik und Authentik.
 - Der Ollama-Stack läuft und ist im Netzwerk `web` erreichbar.
+- Der SearXNG-Stack läuft und hat das interne Netzwerk `searxng_clients`
+  angelegt.
 - Das externe Docker-Netzwerk `web` existiert.
 - DNS für `webui.<DOMAIN>` zeigt auf den Server.
 - TCP 80 und 443 sind extern erreichbar.
@@ -76,4 +85,5 @@ Weiter mit:
 - [Authentik einrichten](authentik-einrichten.md)
 - [Ohne OIDC einrichten (Alternative)](authentik-einrichten-ohne-oidc.md)
 - [Erststart und Prüfung](erststart-und-pruefung.md)
+- [Websuche mit SearXNG](websuche-mit-searxng.md)
 - [Betrieb](betrieb.md)
