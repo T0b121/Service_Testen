@@ -232,3 +232,6 @@ Prüfsummen und mehrere Backupgenerationen verwenden.
 
 - [Core: Backup und Wiederherstellung](stacks/core/backup-und-wiederherstellung.md)
 - [Part-DB: Backup und Wiederherstellung](stacks/partdb/backup-und-wiederherstellung.md)
+- [Ollama: Backup und Wiederherstellung](stacks/ollama/backup-und-wiederherstellung.md)
+- [Open WebUI: Backup und Wiederherstellung](stacks/open-webui/backup-und-wiederherstellung.md)
+- [LiteLLM: Backup und Wiederherstellung](stacks/litellm/backup-und-wiederherstellung.md)

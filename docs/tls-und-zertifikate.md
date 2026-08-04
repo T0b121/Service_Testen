@@ -165,7 +165,10 @@ docker compose logs --tail=150 traefik
 
 Das Produktionsvolume wird beim ersten Start automatisch angelegt. Das Staging-Volume bleibt getrennt erhalten.
 
-Part-DB benötigt dabei keine Änderung an seiner `compose.yml` oder `.env`. Sein Router verweist bereits auf den Resolvernamen `letsencrypt`; dessen Staging-/Produktionsziel wird zentral im Core-Stack bestimmt.
+Die zusätzlichen Stacks Part-DB, Ollama, Open WebUI und LiteLLM benötigen
+dabei keine Änderung an ihrer `compose.yml` oder `.env`. Ihre Router verweisen
+bereits auf den Resolvernamen `letsencrypt`; dessen Staging-/Produktionsziel
+wird zentral im Core-Stack bestimmt.
 
 ## 7. Warum getrennte Volumes?
 

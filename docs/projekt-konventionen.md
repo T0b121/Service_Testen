@@ -63,6 +63,9 @@ backup-und-wiederherstellung.md
 fehlerbehebung.md
 ```
 
+Wenn ein Stack zusätzlich die externe Client-Nutzung dokumentiert, darf die
+Betriebsdatei stattdessen präziser `betrieb-und-clients.md` heißen.
+
 Zusätzliche Oberflächen- oder Anwendungsanleitungen werden als eigene Dateien ergänzt.
 
 Die Stack-Dokumentation muss mindestens enthalten:

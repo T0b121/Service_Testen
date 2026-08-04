@@ -100,6 +100,9 @@ Zusätzliche Prüfungen, Datenbankmigrationen und Funktionschecks werden ausschl
 
 - [Core: Betrieb](stacks/core/betrieb.md)
 - [Part-DB: Betrieb](stacks/partdb/betrieb.md)
+- [Ollama: Betrieb](stacks/ollama/betrieb.md)
+- [Open WebUI: Betrieb](stacks/open-webui/betrieb.md)
+- [LiteLLM: Betrieb und Clients](stacks/litellm/betrieb-und-clients.md)
 
 ## 7. Rollback
 
