@@ -28,7 +28,9 @@ curl -I http://litellm.<DOMAIN>
 Erwartet:
 
 - die interne Abfrage enthält `qwen3:0.6b`,
-- HTTP leitet mit `308` zu HTTPS weiter.
+- HTTP leitet mit `308` zu HTTPS weiter,
+- jeder Nicht-API-Pfad fordert vor der LiteLLM-Auslieferung eine
+  Authentik-Anmeldung an.
 
 ## 3. Verwaltung anmelden
 

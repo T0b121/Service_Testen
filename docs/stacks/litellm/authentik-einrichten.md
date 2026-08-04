@@ -153,7 +153,51 @@ normale Mitglieder `internal_user`.
 Anwendung und Provider erstellen. Es ist **keine** Outpost-Zuordnung nötig,
 weil LiteLLM selbst OIDC nutzt und kein Authentik-Proxy-Provider verwendet.
 
-## 5. Zugangsdaten in LiteLLM eintragen
+## 5. Browserzugriff per Forward Auth absichern
+
+Die zweite Anwendung schützt alle LiteLLM-Browserpfade bereits in Traefik. Sie
+verwendet dieselben Gruppen, aber einen eigenen Proxy Provider.
+
+Navigation:
+
+```text
+Applications → Applications → Create with Provider
+```
+
+### Application
+
+```text
+Name: LiteLLM Browser Access
+Slug: litellm-browser-access
+Group: KI
+Policy engine mode: ANY
+Launch URL: https://litellm.<DOMAIN>
+```
+
+Die Anwendung im Benutzer-Dashboard ausblenden, falls die Authentik-Version
+eine Sichtbarkeitsoption anbietet.
+
+### Provider
+
+```text
+Type: Proxy Provider
+Name: LiteLLM Browser Access Provider
+Authorization flow: default-provider-authorization-implicit-consent
+Mode: Forward auth (single application)
+External host: https://litellm.<DOMAIN>
+```
+
+In **Configure Bindings** diese Bindings setzen:
+
+| Gruppe | Order | Enabled | Negate | Timeout | Failure result |
+|---|---:|---|---|---:|---|
+| `litellm-users` | 0 | Ja | Nein | 30 | fail |
+| `litellm-admin` | 1 | Ja | Nein | 30 | fail |
+
+Die Anwendung dem **authentik Embedded Outpost** zuordnen. Bei Forward Auth
+ist kein `Internal Host` erforderlich.
+
+## 6. Zugangsdaten in LiteLLM eintragen
 
 Den gespeicherten Provider über **Edit** erneut öffnen. Dort die `Client ID`
 und das `Client Secret` auslesen und in `Compose/litellm/.env` eintragen:

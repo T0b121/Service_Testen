@@ -91,13 +91,22 @@ services:
       - traefik.http.routers.litellm-api.service=litellm
       - traefik.http.routers.litellm-api.priority=100
 
-      # UI und /sso/* werden von LiteLLM selbst per OIDC geschützt.
+      # Alle Nicht-API-Pfade verlangen zuerst eine Authentik-Sitzung.
       - traefik.http.routers.litellm.rule=Host(`litellm.${DOMAIN}`)
       - traefik.http.routers.litellm.entrypoints=websecure
       - traefik.http.routers.litellm.tls=true
       - traefik.http.routers.litellm.tls.certresolver=letsencrypt
+      - traefik.http.routers.litellm.middlewares=authentik@docker
       - traefik.http.routers.litellm.service=litellm
       - traefik.http.routers.litellm.priority=10
+
+      # Der Outpost-Pfad darf nicht erneut durch Forward Auth laufen.
+      - traefik.http.routers.authentik-outpost-litellm.rule=Host(`litellm.${DOMAIN}`) && PathPrefix(`/outpost.goauthentik.io/`)
+      - traefik.http.routers.authentik-outpost-litellm.entrypoints=websecure
+      - traefik.http.routers.authentik-outpost-litellm.tls=true
+      - traefik.http.routers.authentik-outpost-litellm.tls.certresolver=letsencrypt
+      - traefik.http.routers.authentik-outpost-litellm.service=authentik@docker
+      - traefik.http.routers.authentik-outpost-litellm.priority=1000
 
       - traefik.http.services.litellm.loadbalancer.server.port=4000
 

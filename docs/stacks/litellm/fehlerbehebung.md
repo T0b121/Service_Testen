@@ -36,12 +36,15 @@ docker compose up -d
 Das Volume nur bei einer noch unbenutzten Installation löschen. Andernfalls
 das Passwort in PostgreSQL gezielt ändern oder aus einem Backup wiederherstellen.
 
-## `/ui` zeigt keinen SSO-Login oder die Rückleitung schlägt fehl
+## Browserpfad liefert ohne Anmeldung Inhalte oder `/ui` zeigt keinen SSO-Login
 
 Prüfen:
 
 - OIDC-Provider `LiteLLM OIDC Provider`,
-- Gruppenbindungen `litellm-users` und `litellm-admin`,
+- Proxy Provider `LiteLLM Browser Access Provider`,
+- beide Anwendungen haben Gruppenbindungen für `litellm-users` und
+  `litellm-admin`,
+- `LiteLLM Browser Access` ist dem Authentik Embedded Outpost zugeordnet,
 - `LITELLM_OIDC_CLIENT_ID` und `LITELLM_OIDC_CLIENT_SECRET` in `.env`,
 - `PROXY_BASE_URL=https://litellm.<DOMAIN>`,
 - Redirect URI in Authentik:
@@ -55,6 +58,10 @@ Anwendungs-Slug lauten: `/application/o/authorize/`,
 `/application/o/token/` und `/application/o/userinfo/`. Die verbindliche
 Quelle ist die Discovery-URL
 `https://auth.<DOMAIN>/application/o/litellm/.well-known/openid-configuration`.
+
+Der Router für `/v1` darf keine Forward-Auth-Middleware haben; alle anderen
+LiteLLM-Pfade müssen `authentik@docker` verwenden. Der Outpost-Pfad
+`/outpost.goauthentik.io/` benötigt einen eigenen Router ohne Middleware.
 
 ## Modell nicht verfügbar
 
