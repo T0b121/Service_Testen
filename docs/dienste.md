@@ -12,6 +12,7 @@ und Fehlerbehebung stehen jeweils in der Dokumentation des zugehörigen Stacks.
 | Traefik-Dashboard | `https://proxy.<DOMAIN>/dashboard/` | Proxy-Verwaltung |
 | Uptime Kuma | `https://uptime.<DOMAIN>` | Überwachungsdashboard hinter Authentik und lokalem Uptime-Kuma-Login |
 | Qdrant | `https://qdrant.<DOMAIN>/dashboard` | Vektordatenbank-Web-UI hinter Authentik; die Web-UI verlangt zusätzlich den lokalen Qdrant-API-Schlüssel |
+| Neo4j | `https://neo4j.<DOMAIN>/browser/` | Graphdatenbank-Web-UI hinter Authentik und nativer Neo4j-Anmeldung |
 | Part-DB | `https://partdb.<DOMAIN>` | Teileverwaltung |
 | Ollama | `https://ollama.<DOMAIN>` | Durch Authentik geschützte Modell-API |
 | Open WebUI | `https://webui.<DOMAIN>` | Browseroberfläche für Ollama hinter Authentik |
@@ -37,6 +38,7 @@ die vorgeschaltete Authentik-Anmeldung.
 | SearXNG Search API | `http://searxng-internal:8080/search` | JSON-Suche im Netzwerk `searxng_clients`; keine zusätzliche Anwendungsauthentifizierung und vom SearXNG-Limiter ausgenommen |
 | Qdrant REST | `http://qdrant:6333` | Vektordatenbank im Netzwerk `web` oder `qdrant_clients`; `api-key` ist erforderlich |
 | Qdrant gRPC | `qdrant:6334` | gRPC für interne Vektordatenbank-Clients; `api-key` ist erforderlich |
+| Neo4j Bolt | `neo4j:7687` | Graphdatenbank-Protokoll im Netzwerk `web` oder `neo4j_clients`; native Neo4j-Anmeldung erforderlich |
 
 Datenbanken, Cache-Dienste und reine Proxy-Ziele sind hier bewusst nicht
 aufgeführt. Die Tabelle enthält nur interne Endpunkte, die andere
