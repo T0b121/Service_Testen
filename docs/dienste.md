@@ -10,6 +10,7 @@ und Fehlerbehebung stehen jeweils in der Dokumentation des zugehörigen Stacks.
 |---|---|---|
 | Authentik | `https://auth.<DOMAIN>` | Anmeldung und Zugriffssteuerung |
 | Traefik-Dashboard | `https://proxy.<DOMAIN>/dashboard/` | Proxy-Verwaltung |
+| Uptime Kuma | `https://uptime.<DOMAIN>` | Überwachungsdashboard hinter Authentik und lokalem Uptime-Kuma-Login |
 | Part-DB | `https://partdb.<DOMAIN>` | Teileverwaltung |
 | Ollama | `https://ollama.<DOMAIN>` | Durch Authentik geschützte Modell-API |
 | Open WebUI | `https://webui.<DOMAIN>` | Browseroberfläche für Ollama hinter Authentik |

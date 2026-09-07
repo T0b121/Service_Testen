@@ -14,6 +14,7 @@ Für den Ablauf der Erstinstallation: [Schnellstart](SCHNELLSTART.md). Öffentli
 | Stack | Enthaltene Dienste | Öffentliche Endpunkte | Vorausgesetzte Stacks | Compose-Verzeichnis |
 |---|---|---|---|---|
 | `core` | Traefik, Authentik Server, Authentik Worker, PostgreSQL | `https://auth.<DOMAIN>`<br>`https://proxy.<DOMAIN>/dashboard/` | Keine | `Compose/core/` |
+| `uptime-kuma` | Uptime Kuma | `https://uptime.<DOMAIN>` über Traefik und Authentik | `core` | `Compose/uptime-kuma/` |
 | `partdb` | Part-DB, MariaDB | `https://partdb.<DOMAIN>` | `core` | `Compose/partdb/` |
 | `ollama` | Ollama | `https://ollama.<DOMAIN>` über Traefik und Authentik | `core` | `Compose/ollama/` |
 | `searxng` | SearXNG, Valkey | `https://searxng.<DOMAIN>` über Traefik und Authentik | `core` | `Compose/searxng/` |
@@ -71,6 +72,16 @@ Die von oben nach unten abzuarbeitende Liste steht im [Schnellstart](SCHNELLSTAR
 - [Betrieb](docs/stacks/core/betrieb.md)
 - [Backup und Wiederherstellung](docs/stacks/core/backup-und-wiederherstellung.md)
 - [Fehlerbehebung](docs/stacks/core/fehlerbehebung.md)
+
+### Stack `uptime-kuma`
+
+- [Übersicht](docs/stacks/uptime-kuma/uebersicht.md)
+- [Vorbereiten](docs/stacks/uptime-kuma/vorbereiten.md)
+- [Authentik einrichten](docs/stacks/uptime-kuma/authentik-einrichten.md)
+- [Erststart und Prüfung](docs/stacks/uptime-kuma/erststart-und-pruefung.md)
+- [Betrieb](docs/stacks/uptime-kuma/betrieb.md)
+- [Backup und Wiederherstellung](docs/stacks/uptime-kuma/backup-und-wiederherstellung.md)
+- [Fehlerbehebung](docs/stacks/uptime-kuma/fehlerbehebung.md)
 
 ### Stack `partdb`
 
