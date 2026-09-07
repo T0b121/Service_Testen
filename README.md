@@ -15,6 +15,7 @@ Für den Ablauf der Erstinstallation: [Schnellstart](SCHNELLSTART.md). Öffentli
 |---|---|---|---|---|
 | `core` | Traefik, Authentik Server, Authentik Worker, PostgreSQL | `https://auth.<DOMAIN>`<br>`https://proxy.<DOMAIN>/dashboard/` | Keine | `Compose/core/` |
 | `uptime-kuma` | Uptime Kuma | `https://uptime.<DOMAIN>` über Traefik und Authentik | `core` | `Compose/uptime-kuma/` |
+| `qdrant` | Qdrant | `https://qdrant.<DOMAIN>/dashboard` über Traefik und Authentik | `core`, `uptime-kuma` | `Compose/qdrant/` |
 | `partdb` | Part-DB, MariaDB | `https://partdb.<DOMAIN>` | `core` | `Compose/partdb/` |
 | `ollama` | Ollama | `https://ollama.<DOMAIN>` über Traefik und Authentik | `core` | `Compose/ollama/` |
 | `searxng` | SearXNG, Valkey | `https://searxng.<DOMAIN>` über Traefik und Authentik | `core` | `Compose/searxng/` |
@@ -82,6 +83,16 @@ Die von oben nach unten abzuarbeitende Liste steht im [Schnellstart](SCHNELLSTAR
 - [Betrieb](docs/stacks/uptime-kuma/betrieb.md)
 - [Backup und Wiederherstellung](docs/stacks/uptime-kuma/backup-und-wiederherstellung.md)
 - [Fehlerbehebung](docs/stacks/uptime-kuma/fehlerbehebung.md)
+
+### Stack `qdrant`
+
+- [Übersicht](docs/stacks/qdrant/uebersicht.md)
+- [Vorbereiten](docs/stacks/qdrant/vorbereiten.md)
+- [Authentik einrichten](docs/stacks/qdrant/authentik-einrichten.md)
+- [Erststart und Prüfung](docs/stacks/qdrant/erststart-und-pruefung.md)
+- [Betrieb](docs/stacks/qdrant/betrieb.md)
+- [Backup und Wiederherstellung](docs/stacks/qdrant/backup-und-wiederherstellung.md)
+- [Fehlerbehebung](docs/stacks/qdrant/fehlerbehebung.md)
 
 ### Stack `partdb`
 

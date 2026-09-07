@@ -102,6 +102,7 @@ Zusätzliche Prüfungen, Datenbankmigrationen und Funktionschecks werden ausschl
 
 - [Core: Betrieb](stacks/core/betrieb.md)
 - [Uptime Kuma: Betrieb](stacks/uptime-kuma/betrieb.md)
+- [Qdrant: Betrieb](stacks/qdrant/betrieb.md)
 - [Part-DB: Betrieb](stacks/partdb/betrieb.md)
 - [Ollama: Betrieb](stacks/ollama/betrieb.md)
 - [Open WebUI: Betrieb](stacks/open-webui/betrieb.md)

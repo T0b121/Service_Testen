@@ -11,6 +11,7 @@ und Fehlerbehebung stehen jeweils in der Dokumentation des zugehörigen Stacks.
 | Authentik | `https://auth.<DOMAIN>` | Anmeldung und Zugriffssteuerung |
 | Traefik-Dashboard | `https://proxy.<DOMAIN>/dashboard/` | Proxy-Verwaltung |
 | Uptime Kuma | `https://uptime.<DOMAIN>` | Überwachungsdashboard hinter Authentik und lokalem Uptime-Kuma-Login |
+| Qdrant | `https://qdrant.<DOMAIN>/dashboard` | Vektordatenbank-Web-UI hinter Authentik; die Web-UI verlangt zusätzlich den lokalen Qdrant-API-Schlüssel |
 | Part-DB | `https://partdb.<DOMAIN>` | Teileverwaltung |
 | Ollama | `https://ollama.<DOMAIN>` | Durch Authentik geschützte Modell-API |
 | Open WebUI | `https://webui.<DOMAIN>` | Browseroberfläche für Ollama hinter Authentik |
@@ -34,6 +35,8 @@ die vorgeschaltete Authentik-Anmeldung.
 | Ollama API | `http://ollama:11434` | Direkte Modell-API im Netzwerk `web` für vertrauenswürdige Clients wie Open WebUI und LiteLLM; keine eigene API-Authentifizierung |
 | LiteLLM API | `http://litellm:4000/v1` | OpenAI-kompatible API im Netzwerk `web`; ein gültiger LiteLLM-Virtual-Key bleibt erforderlich |
 | SearXNG Search API | `http://searxng-internal:8080/search` | JSON-Suche im Netzwerk `searxng_clients`; keine zusätzliche Anwendungsauthentifizierung und vom SearXNG-Limiter ausgenommen |
+| Qdrant REST | `http://qdrant:6333` | Vektordatenbank im Netzwerk `web` oder `qdrant_clients`; `api-key` ist erforderlich |
+| Qdrant gRPC | `qdrant:6334` | gRPC für interne Vektordatenbank-Clients; `api-key` ist erforderlich |
 
 Datenbanken, Cache-Dienste und reine Proxy-Ziele sind hier bewusst nicht
 aufgeführt. Die Tabelle enthält nur interne Endpunkte, die andere
