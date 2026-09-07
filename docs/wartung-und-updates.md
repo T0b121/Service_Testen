@@ -107,6 +107,7 @@ Zusätzliche Prüfungen, Datenbankmigrationen und Funktionschecks werden ausschl
 - [LiteLLM: Betrieb und Clients](stacks/litellm/betrieb-und-clients.md)
 - [SearXNG: Betrieb](stacks/searxng/betrieb.md)
 - [Jellyfin: Betrieb](stacks/jellyfin/betrieb.md)
+- [Nextcloud: Betrieb](stacks/nextcloud/betrieb.md)
 
 ## 7. Rollback
 
