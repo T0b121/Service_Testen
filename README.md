@@ -17,6 +17,7 @@ Für den Ablauf der Erstinstallation: [Schnellstart](SCHNELLSTART.md). Öffentli
 | `uptime-kuma` | Uptime Kuma | `https://uptime.<DOMAIN>` über Traefik und Authentik | `core` | `Compose/uptime-kuma/` |
 | `qdrant` | Qdrant | `https://qdrant.<DOMAIN>/dashboard` über Traefik und Authentik | `core`, `uptime-kuma` | `Compose/qdrant/` |
 | `neo4j` | Neo4j Community | `https://neo4j.<DOMAIN>/browser/` über Traefik und Authentik | `core`, `uptime-kuma` | `Compose/neo4j/` |
+| `rustfs` | RustFS S3-Objektspeicher | `https://s3.<DOMAIN>` über Traefik, Forward Auth und natives OIDC | `core`, `uptime-kuma` | `Compose/rustfs/` |
 | `partdb` | Part-DB, MariaDB | `https://partdb.<DOMAIN>` | `core` | `Compose/partdb/` |
 | `ollama` | Ollama | `https://ollama.<DOMAIN>` über Traefik und Authentik | `core` | `Compose/ollama/` |
 | `searxng` | SearXNG, Valkey | `https://searxng.<DOMAIN>` über Traefik und Authentik | `core` | `Compose/searxng/` |
@@ -104,6 +105,16 @@ Die von oben nach unten abzuarbeitende Liste steht im [Schnellstart](SCHNELLSTAR
 - [Betrieb](docs/stacks/neo4j/betrieb.md)
 - [Backup und Wiederherstellung](docs/stacks/neo4j/backup-und-wiederherstellung.md)
 - [Fehlerbehebung](docs/stacks/neo4j/fehlerbehebung.md)
+
+### Stack `rustfs`
+
+- [Übersicht](docs/stacks/rustfs/uebersicht.md)
+- [Vorbereiten](docs/stacks/rustfs/vorbereiten.md)
+- [Authentik einrichten](docs/stacks/rustfs/authentik-einrichten.md)
+- [Erststart und Prüfung](docs/stacks/rustfs/erststart-und-pruefung.md)
+- [Betrieb](docs/stacks/rustfs/betrieb.md)
+- [Backup und Wiederherstellung](docs/stacks/rustfs/backup-und-wiederherstellung.md)
+- [Fehlerbehebung](docs/stacks/rustfs/fehlerbehebung.md)
 
 ### Stack `partdb`
 

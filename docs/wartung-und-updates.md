@@ -104,6 +104,7 @@ Zusätzliche Prüfungen, Datenbankmigrationen und Funktionschecks werden ausschl
 - [Uptime Kuma: Betrieb](stacks/uptime-kuma/betrieb.md)
 - [Qdrant: Betrieb](stacks/qdrant/betrieb.md)
 - [Neo4j: Betrieb](stacks/neo4j/betrieb.md)
+- [RustFS: Betrieb](stacks/rustfs/betrieb.md)
 - [Part-DB: Betrieb](stacks/partdb/betrieb.md)
 - [Ollama: Betrieb](stacks/ollama/betrieb.md)
 - [Open WebUI: Betrieb](stacks/open-webui/betrieb.md)

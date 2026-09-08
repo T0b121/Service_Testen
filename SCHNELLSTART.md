@@ -9,13 +9,14 @@
 7. Optional: [Uptime Kuma vorbereiten](docs/stacks/uptime-kuma/vorbereiten.md), [Authentik für Uptime Kuma einrichten](docs/stacks/uptime-kuma/authentik-einrichten.md) und [Uptime Kuma starten und prüfen](docs/stacks/uptime-kuma/erststart-und-pruefung.md).
 8. Optional: [Qdrant vorbereiten](docs/stacks/qdrant/vorbereiten.md), [Authentik für Qdrant einrichten](docs/stacks/qdrant/authentik-einrichten.md) und [Qdrant starten und prüfen](docs/stacks/qdrant/erststart-und-pruefung.md).
 9. Optional: [Neo4j vorbereiten](docs/stacks/neo4j/vorbereiten.md), [Authentik für Neo4j einrichten](docs/stacks/neo4j/authentik-einrichten.md) und [Neo4j starten und prüfen](docs/stacks/neo4j/erststart-und-pruefung.md).
-10. [Part-DB vorbereiten](docs/stacks/partdb/vorbereiten.md).
-11. [Authentik für Part-DB einrichten](docs/stacks/partdb/authentik-einrichten.md).
-12. [Part-DB starten und prüfen](docs/stacks/partdb/erststart-und-pruefung.md).
-13. [Part-DB verwalten und absichern](docs/stacks/partdb/verwaltung.md).
-14. Optional: [Ollama vorbereiten](docs/stacks/ollama/vorbereiten.md), [Authentik für Ollama einrichten](docs/stacks/ollama/authentik-einrichten.md) und [Ollama starten und prüfen](docs/stacks/ollama/erststart-und-pruefung.md).
-15. Optional: [SearXNG vorbereiten](docs/stacks/searxng/vorbereiten.md), [Authentik für SearXNG einrichten](docs/stacks/searxng/authentik-einrichten.md) und [SearXNG starten und prüfen](docs/stacks/searxng/erststart-und-pruefung.md).
-16. Optional: [Jellyfin vorbereiten](docs/stacks/jellyfin/vorbereiten.md), [Authentik für Jellyfin einrichten](docs/stacks/jellyfin/authentik-einrichten.md) und [Jellyfin starten und prüfen](docs/stacks/jellyfin/erststart-und-pruefung.md).
-17. Optional: [Nextcloud vorbereiten](docs/stacks/nextcloud/vorbereiten.md), [Authentik für Nextcloud und ONLYOFFICE einrichten](docs/stacks/nextcloud/authentik-einrichten.md) und [Nextcloud starten und prüfen](docs/stacks/nextcloud/erststart-und-pruefung.md).
-18. Optional: [Open WebUI vorbereiten](docs/stacks/open-webui/vorbereiten.md), [Authentik für Open WebUI einrichten](docs/stacks/open-webui/authentik-einrichten.md), [Open WebUI starten und prüfen](docs/stacks/open-webui/erststart-und-pruefung.md) und [die Websuche mit SearXNG einrichten](docs/stacks/open-webui/websuche-mit-searxng.md).
-19. Optional: [LiteLLM vorbereiten](docs/stacks/litellm/vorbereiten.md), [Authentik für LiteLLM einrichten](docs/stacks/litellm/authentik-einrichten.md) und [LiteLLM starten und prüfen](docs/stacks/litellm/erststart-und-pruefung.md).
+10. Optional: [RustFS vorbereiten](docs/stacks/rustfs/vorbereiten.md), [Authentik für RustFS einrichten](docs/stacks/rustfs/authentik-einrichten.md) und [RustFS starten und prüfen](docs/stacks/rustfs/erststart-und-pruefung.md).
+11. [Part-DB vorbereiten](docs/stacks/partdb/vorbereiten.md).
+12. [Authentik für Part-DB einrichten](docs/stacks/partdb/authentik-einrichten.md).
+13. [Part-DB starten und prüfen](docs/stacks/partdb/erststart-und-pruefung.md).
+14. [Part-DB verwalten und absichern](docs/stacks/partdb/verwaltung.md).
+15. Optional: [Ollama vorbereiten](docs/stacks/ollama/vorbereiten.md), [Authentik für Ollama einrichten](docs/stacks/ollama/authentik-einrichten.md) und [Ollama starten und prüfen](docs/stacks/ollama/erststart-und-pruefung.md).
+16. Optional: [SearXNG vorbereiten](docs/stacks/searxng/vorbereiten.md), [Authentik für SearXNG einrichten](docs/stacks/searxng/authentik-einrichten.md) und [SearXNG starten und prüfen](docs/stacks/searxng/erststart-und-pruefung.md).
+17. Optional: [Jellyfin vorbereiten](docs/stacks/jellyfin/vorbereiten.md), [Authentik für Jellyfin einrichten](docs/stacks/jellyfin/authentik-einrichten.md) und [Jellyfin starten und prüfen](docs/stacks/jellyfin/erststart-und-pruefung.md).
+18. Optional: [Nextcloud vorbereiten](docs/stacks/nextcloud/vorbereiten.md), [Authentik für Nextcloud und ONLYOFFICE einrichten](docs/stacks/nextcloud/authentik-einrichten.md) und [Nextcloud starten und prüfen](docs/stacks/nextcloud/erststart-und-pruefung.md).
+19. Optional: [Open WebUI vorbereiten](docs/stacks/open-webui/vorbereiten.md), [Authentik für Open WebUI einrichten](docs/stacks/open-webui/authentik-einrichten.md), [Open WebUI starten und prüfen](docs/stacks/open-webui/erststart-und-pruefung.md) und [die Websuche mit SearXNG einrichten](docs/stacks/open-webui/websuche-mit-searxng.md).
+20. Optional: [LiteLLM vorbereiten](docs/stacks/litellm/vorbereiten.md), [Authentik für LiteLLM einrichten](docs/stacks/litellm/authentik-einrichten.md) und [LiteLLM starten und prüfen](docs/stacks/litellm/erststart-und-pruefung.md).

@@ -21,6 +21,7 @@ und Fehlerbehebung stehen jeweils in der Dokumentation des zugehörigen Stacks.
 | Jellyfin | `https://jellyfin.<DOMAIN>` | Medienbibliothek im Browser hinter Authentik und lokaler Jellyfin-Anmeldung |
 | Nextcloud | `https://cloud.<DOMAIN>` | Dateien, Kalender, Kontakte und WebDAV mit nativem Authentik-OIDC |
 | ONLYOFFICE | `https://office.<DOMAIN>` | Browser-Editor für Nextcloud hinter Authentik |
+| RustFS Console | `https://s3.<DOMAIN>` | S3-Objektspeicher-Konsole hinter Authentik Forward Auth und nativer OIDC-Anmeldung |
 
 Für weitere öffentliche Dienste wird hier nur eine Zeile ergänzt. Die
 technische Beschreibung gehört in `docs/stacks/<stack>/`.
@@ -39,6 +40,7 @@ die vorgeschaltete Authentik-Anmeldung.
 | Qdrant REST | `http://qdrant:6333` | Vektordatenbank im Netzwerk `web` oder `qdrant_clients`; `api-key` ist erforderlich |
 | Qdrant gRPC | `qdrant:6334` | gRPC für interne Vektordatenbank-Clients; `api-key` ist erforderlich |
 | Neo4j Bolt | `neo4j:7687` | Graphdatenbank-Protokoll im Netzwerk `web` oder `neo4j_clients`; native Neo4j-Anmeldung erforderlich |
+| RustFS S3 | `http://rustfs:9000` | S3-API nur im Netzwerk `rustfs_clients`; anwendungseigener Service-Account erforderlich |
 
 Datenbanken, Cache-Dienste und reine Proxy-Ziele sind hier bewusst nicht
 aufgeführt. Die Tabelle enthält nur interne Endpunkte, die andere

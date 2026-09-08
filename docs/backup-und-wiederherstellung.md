@@ -238,5 +238,6 @@ Prüfsummen und mehrere Backupgenerationen verwenden.
 - [Ollama: Backup und Wiederherstellung](stacks/ollama/backup-und-wiederherstellung.md)
 - [Open WebUI: Backup und Wiederherstellung](stacks/open-webui/backup-und-wiederherstellung.md)
 - [LiteLLM: Backup und Wiederherstellung](stacks/litellm/backup-und-wiederherstellung.md)
+- [RustFS: Backup und Wiederherstellung](stacks/rustfs/backup-und-wiederherstellung.md)
 - [SearXNG: Backup und Wiederherstellung](stacks/searxng/backup-und-wiederherstellung.md)
 - [Jellyfin: Backup und Wiederherstellung](stacks/jellyfin/backup-und-wiederherstellung.md)
