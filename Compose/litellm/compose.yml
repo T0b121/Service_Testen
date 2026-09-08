@@ -56,6 +56,11 @@ services:
       UI_PASSWORD: ${LITELLM_UI_PASSWORD}
       STORE_MODEL_IN_DB: "true"
 
+      # Langfuse-OTel-Tracing; nur über das interne Docker-Netz erreichbar.
+      LANGFUSE_PUBLIC_KEY: ${LANGFUSE_PUBLIC_KEY}
+      LANGFUSE_SECRET_KEY: ${LANGFUSE_SECRET_KEY}
+      LANGFUSE_OTEL_HOST: http://langfuse:3000
+
     volumes:
       - ./config.yaml:/app/config.yaml:ro
 
@@ -65,6 +70,7 @@ services:
     networks:
       - web
       - litellm_internal
+      - langfuse_clients
 
     depends_on:
       litellm-postgresql:
@@ -124,6 +130,10 @@ networks:
   litellm_internal:
     name: litellm_internal
     internal: true
+
+  langfuse_clients:
+    external: true
+    name: langfuse_clients
 
 volumes:
   litellm_postgresql_data:

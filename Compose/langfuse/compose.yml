@@ -1,0 +1,256 @@
+services:
+  langfuse-postgresql:
+    image: postgres:${POSTGRES_VERSION}
+    container_name: langfuse-postgresql
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+
+    environment:
+      POSTGRES_DB: ${LANGFUSE_POSTGRES_DB}
+      POSTGRES_USER: ${LANGFUSE_POSTGRES_USER}
+      POSTGRES_PASSWORD: ${LANGFUSE_POSTGRES_PASSWORD}
+      TZ: UTC
+      PGTZ: UTC
+
+    volumes:
+      - langfuse_postgresql_data:/var/lib/postgresql
+
+    networks:
+      - langfuse_internal
+
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -d \"$${POSTGRES_DB}\" -U \"$${POSTGRES_USER}\""]
+      start_period: 30s
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
+
+  langfuse-clickhouse:
+    image: clickhouse/clickhouse-server:${CLICKHOUSE_VERSION}
+    container_name: langfuse-clickhouse
+    restart: unless-stopped
+    user: "101:101"
+    security_opt:
+      - no-new-privileges:true
+
+    environment:
+      CLICKHOUSE_DB: ${LANGFUSE_CLICKHOUSE_DB}
+      CLICKHOUSE_USER: ${LANGFUSE_CLICKHOUSE_USER}
+      CLICKHOUSE_PASSWORD: ${LANGFUSE_CLICKHOUSE_PASSWORD}
+
+    volumes:
+      - langfuse_clickhouse_data:/var/lib/clickhouse
+      - langfuse_clickhouse_logs:/var/log/clickhouse-server
+
+    networks:
+      - langfuse_internal
+
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://127.0.0.1:8123/ping || exit 1"]
+      start_period: 20s
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
+
+  langfuse-valkey:
+    image: valkey/valkey:${VALKEY_VERSION}
+    container_name: langfuse-valkey
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+
+    environment:
+      LANGFUSE_VALKEY_PASSWORD: ${LANGFUSE_VALKEY_PASSWORD}
+
+    command:
+      - valkey-server
+      - --requirepass
+      - ${LANGFUSE_VALKEY_PASSWORD}
+      - --maxmemory-policy
+      - noeviction
+
+    volumes:
+      - langfuse_valkey_data:/data
+
+    networks:
+      - langfuse_internal
+
+    healthcheck:
+      test: ["CMD-SHELL", "valkey-cli -a \"$${LANGFUSE_VALKEY_PASSWORD}\" ping | grep -qx PONG"]
+      start_period: 10s
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
+
+  langfuse-worker:
+    image: langfuse/langfuse-worker:${LANGFUSE_VERSION}
+    container_name: langfuse-worker
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+
+    environment: &langfuse_environment
+      NEXTAUTH_URL: https://langfuse.${DOMAIN}
+      DATABASE_URL: postgresql://${LANGFUSE_POSTGRES_USER}:${LANGFUSE_POSTGRES_PASSWORD}@langfuse-postgresql:5432/${LANGFUSE_POSTGRES_DB}
+      DIRECT_URL: postgresql://${LANGFUSE_POSTGRES_USER}:${LANGFUSE_POSTGRES_PASSWORD}@langfuse-postgresql:5432/${LANGFUSE_POSTGRES_DB}
+      SALT: ${LANGFUSE_SALT}
+      ENCRYPTION_KEY: ${LANGFUSE_ENCRYPTION_KEY}
+      TELEMETRY_ENABLED: "false"
+      CLICKHOUSE_MIGRATION_URL: clickhouse://langfuse-clickhouse:9000
+      CLICKHOUSE_URL: http://langfuse-clickhouse:8123
+      CLICKHOUSE_USER: ${LANGFUSE_CLICKHOUSE_USER}
+      CLICKHOUSE_PASSWORD: ${LANGFUSE_CLICKHOUSE_PASSWORD}
+      CLICKHOUSE_DB: ${LANGFUSE_CLICKHOUSE_DB}
+      CLICKHOUSE_CLUSTER_ENABLED: "false"
+      REDIS_CONNECTION_STRING: redis://:${LANGFUSE_VALKEY_PASSWORD}@langfuse-valkey:6379
+      LANGFUSE_S3_EVENT_UPLOAD_BUCKET: langfuse
+      LANGFUSE_S3_EVENT_UPLOAD_REGION: auto
+      LANGFUSE_S3_EVENT_UPLOAD_ACCESS_KEY_ID: ${RUSTFS_LANGFUSE_ACCESS_KEY}
+      LANGFUSE_S3_EVENT_UPLOAD_SECRET_ACCESS_KEY: ${RUSTFS_LANGFUSE_SECRET_KEY}
+      LANGFUSE_S3_EVENT_UPLOAD_ENDPOINT: http://rustfs:9000
+      LANGFUSE_S3_EVENT_UPLOAD_FORCE_PATH_STYLE: "true"
+      LANGFUSE_S3_EVENT_UPLOAD_PREFIX: events/
+      LANGFUSE_S3_MEDIA_UPLOAD_BUCKET: langfuse
+      LANGFUSE_S3_MEDIA_UPLOAD_REGION: auto
+      LANGFUSE_S3_MEDIA_UPLOAD_ACCESS_KEY_ID: ${RUSTFS_LANGFUSE_ACCESS_KEY}
+      LANGFUSE_S3_MEDIA_UPLOAD_SECRET_ACCESS_KEY: ${RUSTFS_LANGFUSE_SECRET_KEY}
+      LANGFUSE_S3_MEDIA_UPLOAD_ENDPOINT: http://rustfs:9000
+      LANGFUSE_S3_MEDIA_UPLOAD_FORCE_PATH_STYLE: "true"
+      LANGFUSE_S3_MEDIA_UPLOAD_PREFIX: media/
+
+    networks:
+      - langfuse_internal
+      - rustfs_clients
+
+    depends_on: &langfuse_dependencies
+      langfuse-postgresql:
+        condition: service_healthy
+      langfuse-clickhouse:
+        condition: service_healthy
+      langfuse-valkey:
+        condition: service_healthy
+
+    healthcheck:
+      test: ["CMD-SHELL", "node -e \"fetch('http://' + process.env.HOSTNAME + ':3030/api/health').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))\""]
+      start_period: 90s
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
+
+  langfuse:
+    image: langfuse/langfuse:${LANGFUSE_VERSION}
+    container_name: langfuse
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+
+    environment:
+      <<: *langfuse_environment
+      NEXTAUTH_SECRET: ${LANGFUSE_NEXTAUTH_SECRET}
+      AUTH_DISABLE_USERNAME_PASSWORD: "true"
+      AUTH_AUTHENTIK_CLIENT_ID: ${LANGFUSE_OIDC_CLIENT_ID}
+      AUTH_AUTHENTIK_CLIENT_SECRET: ${LANGFUSE_OIDC_CLIENT_SECRET}
+      AUTH_AUTHENTIK_ISSUER: https://auth.${DOMAIN}/application/o/langfuse/
+      AUTH_AUTHENTIK_ALLOW_ACCOUNT_LINKING: "true"
+      LANGFUSE_INIT_ORG_ID: homelab
+      LANGFUSE_INIT_ORG_NAME: Homelab
+      LANGFUSE_INIT_PROJECT_ID: litellm
+      LANGFUSE_INIT_PROJECT_NAME: LiteLLM
+      LANGFUSE_INIT_PROJECT_PUBLIC_KEY: ${LANGFUSE_PROJECT_PUBLIC_KEY}
+      LANGFUSE_INIT_PROJECT_SECRET_KEY: ${LANGFUSE_PROJECT_SECRET_KEY}
+      LANGFUSE_INIT_USER_EMAIL: ${LANGFUSE_ADMIN_EMAIL}
+      LANGFUSE_INIT_USER_NAME: ${LANGFUSE_ADMIN_NAME}
+      LANGFUSE_INIT_USER_PASSWORD: ${LANGFUSE_INIT_USER_PASSWORD}
+      LANGFUSE_S3_MEDIA_UPLOAD_INTERNAL_ENDPOINT: http://rustfs:9000
+
+    expose:
+      - "3000"
+
+    networks:
+      - web
+      - langfuse_internal
+      - langfuse_clients
+      - rustfs_clients
+
+    depends_on: *langfuse_dependencies
+
+    healthcheck:
+      test: ["CMD-SHELL", "node -e \"fetch('http://' + process.env.HOSTNAME + ':3000/api/public/health?failIfDatabaseUnavailable=true').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))\""]
+      start_period: 120s
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=web
+      - traefik.http.routers.langfuse.rule=Host(`langfuse.${DOMAIN}`)
+      - traefik.http.routers.langfuse.entrypoints=websecure
+      - traefik.http.routers.langfuse.tls=true
+      - traefik.http.routers.langfuse.tls.certresolver=letsencrypt
+      - traefik.http.routers.langfuse.middlewares=authentik@docker
+      - traefik.http.routers.langfuse.service=langfuse
+
+      - traefik.http.routers.authentik-outpost-langfuse.rule=Host(`langfuse.${DOMAIN}`) && PathPrefix(`/outpost.goauthentik.io/`)
+      - traefik.http.routers.authentik-outpost-langfuse.entrypoints=websecure
+      - traefik.http.routers.authentik-outpost-langfuse.tls=true
+      - traefik.http.routers.authentik-outpost-langfuse.tls.certresolver=letsencrypt
+      - traefik.http.routers.authentik-outpost-langfuse.service=authentik@docker
+      - traefik.http.routers.authentik-outpost-langfuse.priority=1000
+
+      - traefik.http.services.langfuse.loadbalancer.server.port=3000
+
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
+
+networks:
+  web:
+    external: true
+    name: web
+  rustfs_clients:
+    external: true
+    name: rustfs_clients
+  langfuse_clients:
+    external: true
+    name: langfuse_clients
+  langfuse_internal:
+    name: langfuse_internal
+    internal: true
+
+volumes:
+  langfuse_postgresql_data:
+    name: langfuse_postgresql_data
+  langfuse_clickhouse_data:
+    name: langfuse_clickhouse_data
+  langfuse_clickhouse_logs:
+    name: langfuse_clickhouse_logs
+  langfuse_valkey_data:
+    name: langfuse_valkey_data
