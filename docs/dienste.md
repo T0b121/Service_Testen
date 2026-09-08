@@ -23,6 +23,7 @@ und Fehlerbehebung stehen jeweils in der Dokumentation des zugehörigen Stacks.
 | ONLYOFFICE | `https://office.<DOMAIN>` | Browser-Editor für Nextcloud hinter Authentik |
 | RustFS Console | `https://s3.<DOMAIN>` | S3-Objektspeicher-Konsole hinter Authentik Forward Auth und nativer OIDC-Anmeldung |
 | Langfuse | `https://langfuse.<DOMAIN>` | LLM-Traces und Auswertung hinter Authentik Forward Auth und nativer OIDC-Anmeldung |
+| Flowise | `https://flowise.<DOMAIN>` | Visuelle LLM-Workflows hinter Authentik Forward Auth und lokaler Flowise-Anmeldung |
 
 Für weitere öffentliche Dienste wird hier nur eine Zeile ergänzt. Die
 technische Beschreibung gehört in `docs/stacks/<stack>/`.

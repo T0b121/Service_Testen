@@ -19,6 +19,7 @@ Für den Ablauf der Erstinstallation: [Schnellstart](SCHNELLSTART.md). Öffentli
 | `neo4j` | Neo4j Community | `https://neo4j.<DOMAIN>/browser/` über Traefik und Authentik | `core`, `uptime-kuma` | `Compose/neo4j/` |
 | `rustfs` | RustFS S3-Objektspeicher | `https://s3.<DOMAIN>` über Traefik, Forward Auth und natives OIDC | `core`, `uptime-kuma` | `Compose/rustfs/` |
 | `langfuse` | Langfuse, PostgreSQL, ClickHouse, Valkey | `https://langfuse.<DOMAIN>` über Traefik, Forward Auth und natives OIDC | `core`, `rustfs` | `Compose/langfuse/` |
+| `flowise` | Flowise, PostgreSQL | `https://flowise.<DOMAIN>` über Traefik und Authentik Forward Auth | `core`, `litellm`, `qdrant`, `neo4j` | `Compose/flowise/` |
 | `partdb` | Part-DB, MariaDB | `https://partdb.<DOMAIN>` | `core` | `Compose/partdb/` |
 | `ollama` | Ollama | `https://ollama.<DOMAIN>` über Traefik und Authentik | `core` | `Compose/ollama/` |
 | `searxng` | SearXNG, Valkey | `https://searxng.<DOMAIN>` über Traefik und Authentik | `core` | `Compose/searxng/` |
@@ -126,6 +127,16 @@ Die von oben nach unten abzuarbeitende Liste steht im [Schnellstart](SCHNELLSTAR
 - [Betrieb](docs/stacks/langfuse/betrieb.md)
 - [Backup und Wiederherstellung](docs/stacks/langfuse/backup-und-wiederherstellung.md)
 - [Fehlerbehebung](docs/stacks/langfuse/fehlerbehebung.md)
+
+### Stack `flowise`
+
+- [Übersicht](docs/stacks/flowise/uebersicht.md)
+- [Vorbereiten](docs/stacks/flowise/vorbereiten.md)
+- [Authentik einrichten](docs/stacks/flowise/authentik-einrichten.md)
+- [Erststart und Prüfung](docs/stacks/flowise/erststart-und-pruefung.md)
+- [Betrieb](docs/stacks/flowise/betrieb.md)
+- [Backup und Wiederherstellung](docs/stacks/flowise/backup-und-wiederherstellung.md)
+- [Fehlerbehebung](docs/stacks/flowise/fehlerbehebung.md)
 
 ### Stack `partdb`
 
