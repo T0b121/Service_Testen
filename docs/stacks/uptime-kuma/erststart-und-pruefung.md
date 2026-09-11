@@ -103,10 +103,16 @@ Netzwerkerreichbarkeit. Die Instanz enthält diese internen HTTP-Monitore mit
 | Part-DB | `http://partdb-server/` mit Proxy-Headern | `200` bis `399` |
 | Nextcloud | `http://nextcloud/status.php` | `200` |
 | ONLYOFFICE | `http://nextcloud-onlyoffice/healthcheck` | `200` |
+| GitLab | `http://gitlab/users/sign_in` mit Proxy-Headern | `200` |
 
 Part-DB erwartet den öffentlichen Hostnamen und wird daher intern mit
 `Host`, `X-Forwarded-Host` und `X-Forwarded-Proto: https` abgefragt. Die
 reguläre Weiterleitung auf die Sprachroute ist dort zulässig.
+
+GitLab verwendet intern ebenfalls die Header `Host: gitlab.<DOMAIN>` und
+`X-Forwarded-Proto: https`. Der Pfad `/-/health` ist über den internen
+Webserver nicht verfügbar und liefert `404`; deshalb überwacht Kuma stattdessen
+die öffentliche Anmeldeseite über die interne Docker-Adresse.
 
 Alle anderen Monitore prüfen ausschließlich interne Ziele im Docker-Netzwerk
 `web`; weder externe Domains noch ungeschützte Browserendpunkte werden dafür
@@ -114,14 +120,14 @@ verwendet.
 
 ### Vormerkungen für die geplanten Stacks
 
-Die folgenden neun HTTP-Monitore wurden auf Wunsch bereits angelegt. Sie sind
+Die folgenden acht HTTP-Monitore wurden auf Wunsch bereits angelegt. Sie sind
 bis zur jeweiligen Bereitstellung absichtlich rot. Die Zielnamen folgen den
 vorgesehenen Compose-Servicenamen und werden beim Einrichten des jeweiligen
 Stacks gegen dessen echten internen Health-Endpunkt geprüft und nötigenfalls
 aktualisiert:
 
 ```text
-Qdrant, Neo4j, Langfuse, Flowise, n8n, GitLab, Paperless-ngx, LocalAI und ComfyUI
+Qdrant, Neo4j, Langfuse, Flowise, n8n, Paperless-ngx, LocalAI und ComfyUI
 ```
 
 Der jeweilige Stack-Commit dokumentiert Name, Monitor-Typ, interne Adresse,
