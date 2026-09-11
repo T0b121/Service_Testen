@@ -71,6 +71,9 @@ services:
       - web
       - litellm_internal
       - langfuse_clients
+      # Ermöglicht ausschließlich optionale, in der LiteLLM-Oberfläche angelegte
+      # Neo4j-MCP-Einträge. Es wird kein MCP-Server automatisch konfiguriert.
+      - neo4j_clients
 
     depends_on:
       litellm-postgresql:
@@ -134,6 +137,10 @@ networks:
   langfuse_clients:
     external: true
     name: langfuse_clients
+
+  neo4j_clients:
+    external: true
+    name: neo4j_clients
 
 volumes:
   litellm_postgresql_data:

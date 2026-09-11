@@ -27,3 +27,12 @@ Ein kompakter Funktionstest nach der Anmeldung:
 ```cypher
 RETURN 1 AS ok;
 ```
+
+## MCP-Prüfung
+
+Nach dem Stack-Start muss zusätzlich `neo4j-mcp` laufen. Seine Schnittstelle
+ist nur aus `neo4j_clients` erreichbar und wird über LiteLLM geprüft. In der
+LiteLLM-Oberfläche muss der manuell angelegte Neo4j-MCP-Server vier Tools
+anzeigen. Ein `401` bedeutet fast immer einen falsch aufgebauten
+`Authorization`-Header; bei der statischen Header-Konfiguration muss er mit
+`Basic ` beginnen.

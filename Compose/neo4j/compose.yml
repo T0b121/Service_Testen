@@ -7,6 +7,8 @@ services:
     environment:
       # Das offizielle Image liest Benutzername/Passwort nativ aus Docker Secrets.
       NEO4J_AUTH_FILE: /run/secrets/neo4j_auth
+      # Der offizielle Neo4j-MCP-Server benötigt APOC für die Schema-Ermittlung.
+      NEO4J_PLUGINS: '["apoc"]'
 
     secrets:
       - neo4j_auth
@@ -46,6 +48,38 @@ services:
       - traefik.http.routers.authentik-outpost-neo4j.service=authentik@docker
       - traefik.http.routers.authentik-outpost-neo4j.priority=100
       - traefik.http.services.neo4j.loadbalancer.server.port=7474
+
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
+
+  # Ausschließlich interner MCP-Endpunkt für den n8n MCP Client Tool-Knoten.
+  # Der Agent bekommt damit strukturierte Neo4j-Tools statt eines HTTP-Nodes.
+  neo4j-mcp:
+    image: neo4j/mcp:${NEO4J_MCP_VERSION}
+    container_name: neo4j-mcp
+    restart: unless-stopped
+
+    environment:
+      # In HTTP mode, URI, Datenbank und Zugangsdaten werden ausschließlich
+      # vom MCP-Client pro Anfrage als Header übergeben.
+      NEO4J_TRANSPORT_MODE: http
+      NEO4J_MCP_HTTP_HOST: 0.0.0.0
+      NEO4J_MCP_HTTP_PORT: "80"
+      NEO4J_TELEMETRY: "false"
+      NEO4J_LOG_FORMAT: json
+
+    depends_on:
+      neo4j:
+        condition: service_healthy
+
+    expose:
+      - "80"
+
+    networks:
+      - neo4j_clients
 
     logging:
       driver: json-file
