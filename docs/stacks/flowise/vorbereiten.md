@@ -32,7 +32,7 @@ docker compose config --quiet
 | Variablenblock | Zweck |
 |---|---|
 | `FLOWISE_POSTGRES_*` | dedizierter PostgreSQL-Datenbankzugang |
-| `FLOWISE_USERNAME`, `FLOWISE_PASSWORD` | lokaler administrativer Flowise-Zugang |
+| `FLOWISE_USERNAME`, `FLOWISE_PASSWORD` | lokaler administrativer Flowise-Zugang; der Benutzername muss eine gültige E-Mail-Adresse sein, z. B. `flowise-admin@<DOMAIN>` |
 | `FLOWISE_SECRETKEY_OVERWRITE` | dauerhafter Schlüssel zum Verschlüsseln gespeicherter Flowise-Credentials |
 | `FLOWISE_JWT_AUTH_TOKEN_SECRET`, `FLOWISE_JWT_REFRESH_TOKEN_SECRET`, `FLOWISE_EXPRESS_SESSION_SECRET`, `FLOWISE_TOKEN_HASH_SECRET` | voneinander unabhängige Sitzung- und Token-Geheimnisse |
 
