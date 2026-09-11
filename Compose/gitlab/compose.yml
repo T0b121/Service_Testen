@@ -1,0 +1,230 @@
+services:
+  gitlab:
+    image: gitlab/gitlab-ce:${GITLAB_VERSION}
+    container_name: gitlab
+    hostname: gitlab.${DOMAIN}
+    restart: unless-stopped
+    shm_size: "256m"
+    mem_limit: 8g
+    cpus: "6"
+    environment:
+      TZ: Europe/Berlin
+      GITLAB_OMNIBUS_CONFIG: |
+        external_url 'https://gitlab.${DOMAIN}'
+        nginx['listen_port'] = 80
+        nginx['listen_https'] = false
+        letsencrypt['enable'] = false
+        gitlab_rails['initial_root_password'] = File.read('/run/secrets/gitlab_initial_root_password').strip
+        # Sicherheitsrelevante Application Settings werden idempotent durch
+        # scripts/apply-security-settings.sh per GitLab-API gesetzt.
+        gitlab_rails['omniauth_enabled'] = true
+        gitlab_rails['omniauth_allow_single_sign_on'] = ['openid_connect']
+        gitlab_rails['omniauth_auto_link_user'] = ['openid_connect']
+        gitlab_rails['omniauth_sync_email_from_provider'] = 'openid_connect'
+        gitlab_rails['omniauth_sync_profile_from_provider'] = ['openid_connect']
+        gitlab_rails['omniauth_sync_profile_attributes'] = ['email', 'name']
+        gitlab_rails['omniauth_providers'] = [
+          {
+            'name' => 'openid_connect',
+            'label' => 'Authentik',
+            'args' => {
+              'name' => 'openid_connect',
+              'scope' => ['openid', 'profile', 'email'],
+              'response_type' => 'code',
+              'issuer' => 'https://auth.${DOMAIN}/application/o/gitlab/',
+              'discovery' => true,
+              'uid_field' => 'sub',
+              'client_auth_method' => 'query',
+              'pkce' => true,
+              'client_options' => {
+                'identifier' => '${GITLAB_OIDC_CLIENT_ID}',
+                'secret' => File.read('/run/secrets/gitlab_oidc_client_secret').strip,
+                'redirect_uri' => 'https://gitlab.${DOMAIN}/users/auth/openid_connect/callback'
+              }
+            }
+          }
+        ]
+        puma['worker_processes'] = 0
+        sidekiq['concurrency'] = 10
+        gitlab_rails['env'] = { 'MALLOC_CONF' => 'dirty_decay_ms:1000,muzzy_decay_ms:1000' }
+        gitaly['env'] = { 'MALLOC_CONF' => 'dirty_decay_ms:1000,muzzy_decay_ms:1000' }
+        alertmanager['enable'] = false
+        gitlab_exporter['enable'] = false
+        gitlab_kas['enable'] = false
+        node_exporter['enable'] = false
+        postgres_exporter['enable'] = false
+        prometheus_monitoring['enable'] = false
+        prometheus['enable'] = false
+        puma['exporter_enabled'] = false
+        redis_exporter['enable'] = false
+        sidekiq['metrics_enabled'] = false
+        mattermost['enable'] = false
+        gitlab_pages['enable'] = false
+        registry['enable'] = false
+        gitlab_rails['registry_enabled'] = false
+        gitlab_rails['gitlab_default_projects_features_container_registry'] = false
+    secrets:
+      - gitlab_initial_root_password
+      - gitlab_oidc_client_secret
+    volumes:
+      - gitlab_config:/etc/gitlab
+      - gitlab_logs:/var/log/gitlab
+      - gitlab_data:/var/opt/gitlab
+    expose:
+      - "80"
+    networks:
+      - web
+    healthcheck:
+      test: ["CMD-SHELL", "curl --fail --silent http://127.0.0.1/-/readiness || exit 1"]
+      start_period: 15m
+      interval: 30s
+      timeout: 10s
+      retries: 10
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=web
+      - traefik.http.routers.gitlab.rule=Host(`gitlab.${DOMAIN}`)
+      - traefik.http.routers.gitlab.entrypoints=websecure
+      - traefik.http.routers.gitlab.tls=true
+      - traefik.http.routers.gitlab.tls.certresolver=letsencrypt
+      - traefik.http.routers.gitlab.service=gitlab
+      - traefik.http.services.gitlab.loadbalancer.server.port=80
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
+
+  gitlab-runner:
+    image: gitlab/gitlab-runner:${GITLAB_RUNNER_VERSION}
+    container_name: gitlab-runner
+    restart: unless-stopped
+    mem_limit: 512m
+    cpus: "1"
+    environment:
+      TZ: Europe/Berlin
+    volumes:
+      - gitlab_runner_config:/etc/gitlab-runner
+      # Docker-Executor: nur fuer eigene, vertraute Projekte. Der Socket ist
+      # trotz nicht privilegierter Job-Container ein Host-Privileg.
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - web
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
+
+  gitlab-auth-sync:
+    build:
+      context: ./auth-sync
+    image: local/gitlab-auth-sync:1.0.0
+    container_name: gitlab-auth-sync
+    restart: unless-stopped
+    mem_limit: 128m
+    cpus: "0.25"
+    user: "1000:1000"
+    environment:
+      TZ: Europe/Berlin
+      AUTHENTIK_URL: https://auth.${DOMAIN}
+      GITLAB_URL: http://gitlab
+      AUTHENTIK_USERS_GROUP: gitlab-users
+      AUTHENTIK_ADMINS_GROUP: gitlab-admins
+      POLL_SECONDS: "300"
+    secrets:
+      - authentik_gitlab_sync_api_token
+      - gitlab_auth_sync_api_token
+    networks:
+      - web
+    depends_on:
+      gitlab:
+        condition: service_healthy
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=16m
+    logging:
+      driver: json-file
+      options:
+        max-size: 5m
+        max-file: "3"
+
+  gitlab-security-settings:
+    image: curlimages/curl:8.17.0
+    container_name: gitlab-security-settings
+    restart: "no"
+    mem_limit: 64m
+    cpus: "0.10"
+    user: "1000:1000"
+    environment:
+      TZ: Europe/Berlin
+    command:
+      - /bin/sh
+      - -ec
+      - |
+        token=$$(cat /run/secrets/gitlab_auth_sync_api_token)
+        attempts=0
+        until curl --fail --silent --connect-timeout 2 --max-time 5 \
+          --header "PRIVATE-TOKEN: $${token}" \
+          http://gitlab/api/v4/version >/dev/null; do
+          attempts=$$((attempts + 1))
+          if [ "$${attempts}" -ge 180 ]; then
+            echo "GitLab wurde nicht innerhalb von 15 Minuten bereit." >&2
+            exit 1
+          fi
+          sleep 5
+        done
+        curl --fail --silent --show-error --request PUT \
+          --header "PRIVATE-TOKEN: $${token}" \
+          --data-urlencode "signup_enabled=false" \
+          --data-urlencode "vscode_extension_marketplace_single_origin_fallback_enabled=false" \
+          http://gitlab/api/v4/application/settings >/dev/null
+        echo "GitLab-Sicherheitseinstellungen angewendet."
+    secrets:
+      - gitlab_auth_sync_api_token
+    networks:
+      - web
+    depends_on:
+      gitlab:
+        condition: service_started
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=8m
+    logging:
+      driver: json-file
+      options:
+        max-size: 1m
+        max-file: "2"
+
+networks:
+  web:
+    external: true
+    name: web
+
+volumes:
+  gitlab_config:
+    name: gitlab_config
+  gitlab_logs:
+    name: gitlab_logs
+  gitlab_data:
+    name: gitlab_data
+  gitlab_runner_config:
+    name: gitlab_runner_config
+
+secrets:
+  gitlab_initial_root_password:
+    file: ./secrets/gitlab_initial_root_password
+  gitlab_oidc_client_secret:
+    file: ./secrets/gitlab_oidc_client_secret
+  authentik_gitlab_sync_api_token:
+    file: ./secrets/authentik_gitlab_sync_api_token
+  gitlab_auth_sync_api_token:
+    file: ./secrets/gitlab_auth_sync_api_token

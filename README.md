@@ -27,6 +27,8 @@ Für den Ablauf der Erstinstallation: [Schnellstart](SCHNELLSTART.md). Öffentli
 | `nextcloud` | Nextcloud, PostgreSQL, Redis, ONLYOFFICE | `https://cloud.<DOMAIN>` mit Authentik-OIDC; `https://office.<DOMAIN>` über Traefik und Authentik | `core`, `jellyfin` | `Compose/nextcloud/` |
 | `open-webui` | Open WebUI | `https://webui.<DOMAIN>` über Traefik und Authentik | `core`, `ollama`, `searxng` | `Compose/open-webui/` |
 | `litellm` | LiteLLM Proxy | `https://litellm.<DOMAIN>/v1` und `/ui` | `core`, `ollama` | `Compose/litellm/` |
+| `n8n` | n8n, PostgreSQL, externe Code Runner | `https://n8n.<DOMAIN>` über Traefik und Authentik Forward Auth | `core`, `litellm`, `searxng` | `Compose/n8n/` |
+| `gitlab` | GitLab CE, einzelner GitLab Runner | `https://gitlab.<DOMAIN>` mit nativem Authentik-OIDC und HTTPS-Git | `core`, `uptime-kuma` | `Compose/gitlab/` |
 
 Wer SearXNG als Online-Suchwerkzeug in Open WebUI verwenden will, arbeitet die
 Anleitung unter

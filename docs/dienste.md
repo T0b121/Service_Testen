@@ -25,6 +25,7 @@ und Fehlerbehebung stehen jeweils in der Dokumentation des zugehörigen Stacks.
 | Langfuse | `https://langfuse.<DOMAIN>` | LLM-Traces und Auswertung hinter Authentik Forward Auth und nativer OIDC-Anmeldung |
 | Flowise | `https://flowise.<DOMAIN>` | Visuelle LLM-Workflows hinter Authentik Forward Auth und lokaler Flowise-Anmeldung |
 | n8n | `https://n8n.<DOMAIN>` | Workflow-Automatisierung hinter Authentik Forward Auth und lokaler n8n-Anmeldung |
+| GitLab CE | `https://gitlab.<DOMAIN>` | Git-Repositories, Issues, Merge Requests und Web IDE mit nativem Authentik-OIDC |
 
 Für weitere öffentliche Dienste wird hier nur eine Zeile ergänzt. Die
 technische Beschreibung gehört in `docs/stacks/<stack>/`.
@@ -46,6 +47,7 @@ die vorgeschaltete Authentik-Anmeldung.
 | RustFS S3 | `http://rustfs:9000` | S3-API nur im Netzwerk `rustfs_clients`; anwendungseigener Service-Account erforderlich |
 | Langfuse Trace API | `http://langfuse:3000` | OTel-Traceaufnahme im Netzwerk `langfuse_clients`; projektbezogene Langfuse-Schlüssel erforderlich |
 | n8n Health | `http://n8n:5678/healthz` | Healthcheck im Netzwerk `web`; kein allgemeiner Maschinenzugang zur n8n-Oberfläche |
+| GitLab | `http://gitlab:80` | GitLab-internes HTTP-Ziel im Netzwerk `web`; nicht für allgemeine Clients vorgesehen |
 
 Datenbanken, Cache-Dienste und reine Proxy-Ziele sind hier bewusst nicht
 aufgeführt. Die Tabelle enthält nur interne Endpunkte, die andere
