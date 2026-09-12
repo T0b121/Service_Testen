@@ -29,6 +29,7 @@ defaults = {
     "external_host": "https://comfyui.{}/".format(os.environ["COMFYUI_DOMAIN"]),
     "internal_host": template.internal_host,
     "mode": template.mode,
+    "grant_types": template.grant_types,
     "intercept_header_auth": template.intercept_header_auth,
     "authorization_flow": template.authorization_flow,
     "authentication_flow": template.authentication_flow,
