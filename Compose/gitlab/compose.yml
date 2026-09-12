@@ -5,8 +5,6 @@ services:
     hostname: gitlab.${DOMAIN}
     restart: unless-stopped
     shm_size: "256m"
-    mem_limit: 8g
-    cpus: "6"
     environment:
       TZ: Europe/Berlin
       GITLAB_OMNIBUS_CONFIG: |
@@ -99,8 +97,6 @@ services:
     image: gitlab/gitlab-runner:${GITLAB_RUNNER_VERSION}
     container_name: gitlab-runner
     restart: unless-stopped
-    mem_limit: 512m
-    cpus: "1"
     environment:
       TZ: Europe/Berlin
     volumes:
@@ -122,8 +118,6 @@ services:
     image: local/gitlab-auth-sync:1.0.0
     container_name: gitlab-auth-sync
     restart: unless-stopped
-    mem_limit: 128m
-    cpus: "0.25"
     user: "1000:1000"
     environment:
       TZ: Europe/Berlin
@@ -157,8 +151,6 @@ services:
     image: curlimages/curl:8.17.0
     container_name: gitlab-security-settings
     restart: "no"
-    mem_limit: 64m
-    cpus: "0.10"
     user: "1000:1000"
     environment:
       TZ: Europe/Berlin

@@ -3,8 +3,6 @@ services:
     image: ghcr.io/paperless-ngx/paperless-ngx:${PAPERLESS_VERSION}
     container_name: paperless
     restart: unless-stopped
-    mem_limit: 3g
-    cpus: "4"
     environment:
       TZ: Europe/Berlin
       USERMAP_UID: "1000"
@@ -86,8 +84,6 @@ services:
     image: postgres:${POSTGRES_VERSION}
     container_name: paperless-postgresql
     restart: unless-stopped
-    mem_limit: 512m
-    cpus: "1"
     environment:
       POSTGRES_DB: ${PAPERLESS_DB_NAME}
       POSTGRES_USER: ${PAPERLESS_DB_USER}
@@ -114,8 +110,6 @@ services:
     image: valkey/valkey:${VALKEY_VERSION}
     container_name: paperless-valkey
     restart: unless-stopped
-    mem_limit: 128m
-    cpus: "0.25"
     command: valkey-server --appendonly yes
     volumes:
       - paperless_valkey_data:/data

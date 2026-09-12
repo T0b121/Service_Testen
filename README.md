@@ -30,6 +30,7 @@ Für den Ablauf der Erstinstallation: [Schnellstart](SCHNELLSTART.md). Öffentli
 | `n8n` | n8n, PostgreSQL, externe Code Runner | `https://n8n.<DOMAIN>` über Traefik und Authentik Forward Auth | `core`, `litellm`, `searxng` | `Compose/n8n/` |
 | `gitlab` | GitLab CE, einzelner GitLab Runner | `https://gitlab.<DOMAIN>` mit nativem Authentik-OIDC und HTTPS-Git | `core`, `uptime-kuma` | `Compose/gitlab/` |
 | `paperless` | Paperless-ngx, PostgreSQL, Valkey | `https://paperless.<DOMAIN>` mit nativem Authentik-OIDC | `core`, `uptime-kuma` | `Compose/paperless/` |
+| `localai` | LocalAI (CPU) | `https://localai.<DOMAIN>` mit nativem Authentik-OIDC | `core`, `gitlab` | `Compose/localai/` |
 
 Wer SearXNG als Online-Suchwerkzeug in Open WebUI verwenden will, arbeitet die
 Anleitung unter
@@ -225,3 +226,9 @@ Die von oben nach unten abzuarbeitende Liste steht im [Schnellstart](SCHNELLSTAR
 - [Betrieb](docs/stacks/paperless/betrieb.md)
 - [Backup und Wiederherstellung](docs/stacks/paperless/backup-und-wiederherstellung.md)
 - [Fehlerbehebung](docs/stacks/paperless/fehlerbehebung.md)
+
+### Stack `localai`
+
+- [Übersicht](docs/stacks/localai/uebersicht.md)
+- [Vorbereiten](docs/stacks/localai/vorbereiten.md)
+- [Erststart und Prüfung](docs/stacks/localai/erststart-und-pruefung.md)
