@@ -28,6 +28,7 @@ und Fehlerbehebung stehen jeweils in der Dokumentation des zugehörigen Stacks.
 | GitLab CE | `https://gitlab.<DOMAIN>` | Git-Repositories, Issues, Merge Requests und Web IDE mit nativem Authentik-OIDC |
 | Paperless-ngx | `https://paperless.<DOMAIN>` | Dokumentenarchiv, OCR und Suche mit nativem Authentik-OIDC |
 | LocalAI | `https://localai.<DOMAIN>` | Lokale, OpenAI-kompatible Modell-API und Weboberfläche mit nativem Authentik-OIDC |
+| ComfyUI | `https://comfyui.<DOMAIN>` | Node-basierte Bild- und Medien-Workflows im CPU-Modus hinter Authentik |
 
 Für weitere öffentliche Dienste wird hier nur eine Zeile ergänzt. Die
 technische Beschreibung gehört in `docs/stacks/<stack>/`.

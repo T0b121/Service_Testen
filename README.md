@@ -31,6 +31,7 @@ Für den Ablauf der Erstinstallation: [Schnellstart](SCHNELLSTART.md). Öffentli
 | `gitlab` | GitLab CE, einzelner GitLab Runner | `https://gitlab.<DOMAIN>` mit nativem Authentik-OIDC und HTTPS-Git | `core`, `uptime-kuma` | `Compose/gitlab/` |
 | `paperless` | Paperless-ngx, PostgreSQL, Valkey | `https://paperless.<DOMAIN>` mit nativem Authentik-OIDC | `core`, `uptime-kuma` | `Compose/paperless/` |
 | `localai` | LocalAI (CPU) | `https://localai.<DOMAIN>` mit nativem Authentik-OIDC | `core`, `gitlab` | `Compose/localai/` |
+| `comfyui` | ComfyUI (CPU) | `https://comfyui.<DOMAIN>` über Traefik und Authentik Forward Auth | `core`, `gitlab` | `Compose/comfyui/` |
 
 Wer SearXNG als Online-Suchwerkzeug in Open WebUI verwenden will, arbeitet die
 Anleitung unter
@@ -232,3 +233,8 @@ Die von oben nach unten abzuarbeitende Liste steht im [Schnellstart](SCHNELLSTAR
 - [Übersicht](docs/stacks/localai/uebersicht.md)
 - [Vorbereiten](docs/stacks/localai/vorbereiten.md)
 - [Erststart und Prüfung](docs/stacks/localai/erststart-und-pruefung.md)
+
+### Stack `comfyui`
+
+- [Übersicht](docs/stacks/comfyui/uebersicht.md)
+- [Erststart und Prüfung](docs/stacks/comfyui/erststart-und-pruefung.md)

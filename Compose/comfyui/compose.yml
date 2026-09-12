@@ -1,0 +1,53 @@
+services:
+  comfyui:
+    image: kagurazakanyaa/comfyui:${COMFYUI_VERSION}
+    container_name: comfyui
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    environment:
+      TZ: Europe/Berlin
+      # Der Server hat keine GPU. ComfyUI läuft deshalb ausdrücklich im CPU-Modus.
+      EXTRA_ARGS: --cpu
+    volumes:
+      - comfyui_data:/data
+    expose:
+      - "8188"
+    networks:
+      - web
+    healthcheck:
+      test: ["CMD-SHELL", "curl --fail --silent http://localhost:8188/system_stats >/dev/null"]
+      start_period: 90s
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=web
+      - traefik.http.routers.comfyui.rule=Host(`comfyui.${DOMAIN}`)
+      - traefik.http.routers.comfyui.entrypoints=websecure
+      - traefik.http.routers.comfyui.tls=true
+      - traefik.http.routers.comfyui.tls.certresolver=letsencrypt
+      - traefik.http.routers.comfyui.middlewares=authentik@docker
+      - traefik.http.routers.comfyui.service=comfyui
+      - traefik.http.services.comfyui.loadbalancer.server.port=8188
+      - traefik.http.routers.authentik-outpost-comfyui.rule=Host(`comfyui.${DOMAIN}`) && PathPrefix(`/outpost.goauthentik.io/`)
+      - traefik.http.routers.authentik-outpost-comfyui.entrypoints=websecure
+      - traefik.http.routers.authentik-outpost-comfyui.tls=true
+      - traefik.http.routers.authentik-outpost-comfyui.tls.certresolver=letsencrypt
+      - traefik.http.routers.authentik-outpost-comfyui.service=authentik@docker
+      - traefik.http.routers.authentik-outpost-comfyui.priority=100
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
+
+networks:
+  web:
+    external: true
+    name: web
+
+volumes:
+  comfyui_data:
+    name: comfyui_data
