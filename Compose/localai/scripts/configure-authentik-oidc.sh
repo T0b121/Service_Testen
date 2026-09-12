@@ -35,6 +35,7 @@ defaults = {
     "client_type": "confidential",
     "authentication_flow": template.authentication_flow,
     "authorization_flow": template.authorization_flow,
+    "signing_key": template.signing_key,
     "grant_types": ["authorization_code"],
     "access_code_validity": template.access_code_validity,
     "access_token_validity": template.access_token_validity,
@@ -64,7 +65,7 @@ app, _ = Application.objects.get_or_create(
         "name": "LocalAI",
         "provider": provider,
         "meta_launch_url": "https://localai.{}/".format(os.environ["LOCALAI_DOMAIN"]),
-        "meta_icon": "https://localai.io/favicon.svg",
+        "meta_icon": "https://raw.githubusercontent.com/mudler/LocalAI/master/docs/static/favicon.svg",
         "group": "KI",
         "policy_engine_mode": "any",
     },
@@ -72,7 +73,7 @@ app, _ = Application.objects.get_or_create(
 app.name = "LocalAI"
 app.provider = provider
 app.meta_launch_url = "https://localai.{}/".format(os.environ["LOCALAI_DOMAIN"])
-app.meta_icon = "https://localai.io/favicon.svg"
+app.meta_icon = "https://raw.githubusercontent.com/mudler/LocalAI/master/docs/static/favicon.svg"
 app.group = "KI"
 app.policy_engine_mode = "any"
 app.save()
