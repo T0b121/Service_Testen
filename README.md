@@ -29,6 +29,7 @@ Für den Ablauf der Erstinstallation: [Schnellstart](SCHNELLSTART.md). Öffentli
 | `litellm` | LiteLLM Proxy | `https://litellm.<DOMAIN>/v1` und `/ui` | `core`, `ollama` | `Compose/litellm/` |
 | `n8n` | n8n, PostgreSQL, externe Code Runner | `https://n8n.<DOMAIN>` über Traefik und Authentik Forward Auth | `core`, `litellm`, `searxng` | `Compose/n8n/` |
 | `gitlab` | GitLab CE, einzelner GitLab Runner | `https://gitlab.<DOMAIN>` mit nativem Authentik-OIDC und HTTPS-Git | `core`, `uptime-kuma` | `Compose/gitlab/` |
+| `paperless` | Paperless-ngx, PostgreSQL, Valkey | `https://paperless.<DOMAIN>` mit nativem Authentik-OIDC | `core`, `uptime-kuma` | `Compose/paperless/` |
 
 Wer SearXNG als Online-Suchwerkzeug in Open WebUI verwenden will, arbeitet die
 Anleitung unter
@@ -214,3 +215,13 @@ Die von oben nach unten abzuarbeitende Liste steht im [Schnellstart](SCHNELLSTAR
 - [Betrieb und Clients](docs/stacks/litellm/betrieb-und-clients.md)
 - [Backup und Wiederherstellung](docs/stacks/litellm/backup-und-wiederherstellung.md)
 - [Fehlerbehebung](docs/stacks/litellm/fehlerbehebung.md)
+
+### Stack `paperless`
+
+- [Übersicht](docs/stacks/paperless/uebersicht.md)
+- [Vorbereiten](docs/stacks/paperless/vorbereiten.md)
+- [Authentik einrichten](docs/stacks/paperless/authentik-einrichten.md)
+- [Erststart und Prüfung](docs/stacks/paperless/erststart-und-pruefung.md)
+- [Betrieb](docs/stacks/paperless/betrieb.md)
+- [Backup und Wiederherstellung](docs/stacks/paperless/backup-und-wiederherstellung.md)
+- [Fehlerbehebung](docs/stacks/paperless/fehlerbehebung.md)
