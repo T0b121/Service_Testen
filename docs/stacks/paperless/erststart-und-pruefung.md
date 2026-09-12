@@ -1,12 +1,20 @@
 # Paperless-ngx: Erststart und Prüfung
 
-Nach der OIDC-Konfiguration starten:
+Zuerst den Stack starten:
 
 ```bash
 cd <PROJEKT_ROOT>/Compose/paperless
 docker compose pull
 docker compose up -d
 docker compose ps
+```
+
+Danach richtet das Skript den separaten OIDC-Client, die Authentik-Anwendung,
+beide Authentik-Gruppen sowie die passenden lokalen Paperless-Gruppen ein:
+
+```bash
+./scripts/configure-authentik-oidc.sh
+docker compose up -d --force-recreate paperless
 ```
 
 Prüfpunkte:

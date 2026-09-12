@@ -17,11 +17,4 @@ Paperless speichert Originale und archivierte Dokumente im lokalen Volume
 Konverter nötig. Office-Dateien und E-Mails mit Anhängen können später bei
 Bedarf mit Tika und Gotenberg ergänzt werden.
 
-Anschließend richtet das versionierte Skript den separaten OIDC-Client,
-die Anwendung und die Gruppen in Authentik ein:
-
-```bash
-./scripts/configure-authentik-oidc.sh
-```
-
 Weiter mit [Erststart und Prüfung](erststart-und-pruefung.md).

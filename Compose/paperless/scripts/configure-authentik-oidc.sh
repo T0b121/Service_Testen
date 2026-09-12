@@ -97,4 +97,29 @@ printf '%s' "$DOMAIN" >> "$provider_config"
 printf '%s\n' '/application/o/paperless/.well-known/openid-configuration","token_auth_method":"client_secret_post"}}],"SCOPE":["openid","profile","email","groups"]}}' >> "$provider_config"
 chmod 600 "$provider_config"
 
+docker exec paperless sh -ec '
+  export PAPERLESS_DBPASS="$(cat /run/secrets/postgresql_password)"
+  cd /usr/src/paperless/src
+  python3 manage.py shell -c "
+from allauth.socialaccount.models import SocialAccount
+from django.contrib.auth.models import Group, Permission
+
+permissions = Permission.objects.filter(content_type__app_label__in=(\"documents\", \"paperless\"))
+users, _ = Group.objects.get_or_create(name=\"paperless-users\")
+admins, _ = Group.objects.get_or_create(name=\"paperless-admins\")
+users.permissions.set(permissions)
+admins.permissions.set(permissions)
+
+for account in SocialAccount.objects.filter(provider=\"authentik\").select_related(\"user\"):
+    claims = account.extra_data.get(\"userinfo\") or account.extra_data.get(\"id_token\") or account.extra_data
+    names = claims.get(\"groups\", [])
+    user = account.user
+    user.groups.set(Group.objects.filter(name__in=names))
+    user.is_superuser = \"paperless-admins\" in names
+    user.is_staff = \"paperless-admins\" in names
+    user.save(update_fields=[\"is_staff\", \"is_superuser\"])
+print(\"Paperless groups and OIDC users are synchronized.\")
+"
+' >/dev/null
+
 printf '%s\n' 'Paperless OIDC configuration has been written without exposing its secret.'

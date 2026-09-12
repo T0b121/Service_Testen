@@ -17,6 +17,9 @@ Die Gruppen werden im OIDC-Token als `groups` übermittelt. Bei jedem Login
 synchronisiert Paperless diese Gruppen; `paperless-admins` wird dabei auf die
 Paperless-Administratorrolle abgebildet.
 
+Das Skript legt die gleichnamigen lokalen Paperless-Gruppen ebenfalls an und
+erteilt `paperless-users` die nötigen Dokument- und Oberflächenrechte.
+
 Provider und Anwendung:
 
 ```text
