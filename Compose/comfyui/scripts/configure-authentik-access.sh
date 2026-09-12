@@ -32,6 +32,18 @@ defaults = {
     "intercept_header_auth": template.intercept_header_auth,
     "authorization_flow": template.authorization_flow,
     "authentication_flow": template.authentication_flow,
+    "_redirect_uris": [
+        {
+            "url": "https://comfyui.{}/outpost.goauthentik.io/callback?X-authentik-auth-callback=true".format(os.environ["COMFYUI_DOMAIN"]),
+            "matching_mode": "strict",
+            "redirect_uri_type": "authorization",
+        },
+        {
+            "url": "https://comfyui.{}/?X-authentik-auth-callback=true".format(os.environ["COMFYUI_DOMAIN"]),
+            "matching_mode": "strict",
+            "redirect_uri_type": "authorization",
+        },
+    ],
 }
 provider, created = ProxyProvider.objects.get_or_create(
     name="ComfyUI Access Provider", defaults=defaults
