@@ -21,6 +21,7 @@ services:
       - --cpu
     volumes:
       - comfyui_data:/data
+      - ./custom_nodes/model-installer-ui:/data/custom_nodes/model-installer-ui:ro
     expose:
       - "8188"
     networks:
