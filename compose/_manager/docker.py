@@ -53,7 +53,7 @@ class Docker:
         for name in order(self.stacks, selected):
             data = self.resources(name)
             validate_exposure(name, data)
-            self.compose(name, 'up', '-d', '--wait', '--wait-timeout', '300')
+            self.compose(name, 'up', '-d', '--wait', '--wait-timeout', str(getattr(self.stacks[name].module, 'START_TIMEOUT', 300)))
 
     def stop(self, selected):
         for name in reversed(order(self.stacks, selected)):
