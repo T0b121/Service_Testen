@@ -70,6 +70,9 @@ Benutzer-IDs. SAML wird beim Part-DB-Stack vorgeführt.
 Optionale Funktionen:
 
 ```python
+def configure(context, config):
+    pass  # Stack-spezifische Auswahl vor cfg.collect(); config.values befüllen.
+
 def before_start(context):
     pass  # Eigene, wiederholbare Vorbereitung nach Ressourcen- und SSO-Anlage.
 
@@ -81,9 +84,11 @@ def sync_user(context, action, user):
 ```
 
 `context` enthält `stacks`, `docker`, `auth`, `state` und `root`. Bei Fehlern
-`ManagerError` auslösen. Hooks dürfen keine allgemeinen ENV- oder Passwortdialoge
-implementieren. Sie werden bei erneuter Einrichtung wieder ausgeführt und müssen
-idempotent sein. `START_TIMEOUT` überschreibt die Bereitschaftszeit in Sekunden.
+`ManagerError` auslösen. `configure` darf stack-spezifische, nicht vertrauliche Optionen erklären und
+abfragen. Werte unter dem vollständigen Referenzschlüssel in `config.values`
+setzen; vorhandene Werte wiederverwenden und validieren. Allgemeine ENV- und
+Passworteingaben bleiben bei `Configuration.collect`. Einrichtungshooks werden
+bei erneuter Einrichtung wieder ausgeführt und müssen idempotent sein. `START_TIMEOUT` überschreibt die Bereitschaftszeit in Sekunden.
 
 Benutzeränderungen werden zuerst in Authentik durchgeführt. Vor einer Löschung wird
 der Zugang gesperrt. Die Adapter für GitLab, Nextcloud und Paperless deaktivieren
@@ -107,3 +112,14 @@ aktuell bearbeiteten Verzeichnisses werden während des Austauschs lokal vorgeha
 
 Nach einem Fehler während der Wiederherstellung bleiben betroffene Container
 gestoppt. Die genannten Importziele prüfen, bevor Dienste wieder gestartet werden.
+
+Nutzer und Dienstgruppen werden ausschließlich über die Manager-Nutzerverwaltung
+geändert. Es gibt absichtlich keinen periodischen GitLab-Abgleich. Änderungen
+direkt in Authentik lösen die lokalen Anwendungshooks nicht aus.
+
+GitLabs `configure` fragt einmal nach dem Web-IDE-Marketplace-Fallback
+(Standard: aus). Die Auswahl steht als `GITLAB_WEB_IDE_MARKETPLACE_FALLBACK`
+in `compose/gitlab/.env`; `after_start` setzt sie zusammen mit der gesperrten
+Registrierung und prüft die gespeicherten Werte. Änderungen über den ENV-Editor
+werden bei dessen erneuter Einrichtung angewendet. Ein bloßer Container-Neustart
+führt Einrichtungshooks nicht aus.
