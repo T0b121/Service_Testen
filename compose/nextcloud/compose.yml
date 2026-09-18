@@ -21,6 +21,7 @@ services:
     secrets:
     - postgresql_password
     - nextcloud_admin_password
+    - nextcloud_oidc_client_secret
     volumes:
     - nextcloud_html:/var/www/html
     - jellyfin_media:/mnt/jellyfin
@@ -242,3 +243,5 @@ secrets:
     file: ./secrets/nextcloud_admin_password
   onlyoffice_jwt_secret:
     file: ./secrets/onlyoffice_jwt_secret
+  nextcloud_oidc_client_secret:
+    file: ./secrets/nextcloud_oidc_client_secret

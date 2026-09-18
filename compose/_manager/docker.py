@@ -46,14 +46,15 @@ class Docker:
                 try:
                     run(['docker', singular, 'inspect', resource], timeout=30)
                 except ManagerError:
-                    run(['docker', singular, 'create', '--label', 'stack-manager.managed=true', resource], timeout=30)
+                    options = ['--internal'] if kind == 'networks' and resource.endswith('_clients') else []
+                    run(['docker', singular, 'create', *options, '--label', 'stack-manager.managed=true', resource], timeout=30)
         return data
 
     def start(self, selected):
         for name in order(self.stacks, selected):
             data = self.resources(name)
             validate_exposure(name, data)
-            self.compose(name, 'up', '-d', '--wait', '--wait-timeout', str(getattr(self.stacks[name].module, 'START_TIMEOUT', 300)))
+            self.compose(name, 'up', '-d', '--wait', '--wait-timeout', str(getattr(self.stacks[name].module, 'START_TIMEOUT', 300)), timeout=getattr(self.stacks[name].module, 'START_TIMEOUT', 300) + 120)
 
     def stop(self, selected):
         for name in reversed(order(self.stacks, selected)):

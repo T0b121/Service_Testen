@@ -80,11 +80,15 @@ def parse(stack, text):
             entries.append(Entry(stack, variable, None, literal=value))
             continue
         mode, expression = m.groups()
-        lexer = shlex.shlex(expression, posix=True, punctuation_chars='|')
-        lexer.whitespace = '|'
-        lexer.whitespace_split = True
-        lexer.commenters = ''
-        pieces = [p.strip() for p in lexer if p.strip() and p != '|']
+        pieces, current, quote, escaped = [], [], None, False
+        for char in expression:
+            if char == '|' and quote is None:
+                pieces.append(''.join(current).strip()); current = []; continue
+            current.append(char)
+            if char in ('"', "'") and not escaped:
+                quote = None if quote == char else char if quote is None else quote
+            escaped = char == '\\' and not escaped
+        pieces.append(''.join(current).strip())
         head, *options = pieces
         key, sep, default = head.partition('=')
         key = key.strip()
@@ -102,7 +106,7 @@ def parse(stack, text):
         seen = set()
         for option in options:
             name, eq, data = option.partition('=')
-            name, data = name.strip(), data.strip()
+            name, data = name.strip(), unquote(data)
             if not eq or name in seen or name not in ('generate', 'targets'):
                 raise ManagerError(f'{stack}: ungültige Vorlagenoption bei {variable}')
             seen.add(name)

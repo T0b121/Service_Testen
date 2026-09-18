@@ -34,6 +34,13 @@ def provision(auth, stack):
                         'goauthentik.io/providers/oauth2/scope-profile', 'goauthentik.io/providers/oauth2/scope-email')]
         if len(mappings) != 3:
             raise ManagerError('OIDC-Standard-Mappings fehlen.')
+        if stack.name == 'open-webui':
+            role = auth.ensure('propertymappings/provider/scope/', {'name': 'stack-manager:open-webui-roles'}, {
+                'scope_name': 'roles', 'expression': 'return {"roles": ["admin"] if ak_is_group_member(request.user, "open-webui-admins") else ["user"]}'})
+            mappings.append(role['pk'])
+        if stack.name == 'nextcloud':
+            mapping = auth.ensure('propertymappings/provider/scope/', {'name': 'stack-manager:nextcloud-groups'}, {
+                'scope_name': 'groups', 'expression': 'return {"groups": list(request.user.groups.values_list("name", flat=True)) + (["admin"] if ak_is_group_member(request.user, "nextcloud-admins") else [])}'})
         provider = auth.ensure('providers/oauth2/', {'name': 'stack-manager:' + spec['slug']}, {
             **common, 'client_id': client, 'client_secret': secret, 'client_type': 'confidential',
             'signing_key': key['pk'], 'property_mappings': [*mappings, mapping['pk']],

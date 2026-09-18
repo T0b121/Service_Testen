@@ -49,6 +49,8 @@ class State:
             except BlockingIOError as error:
                 raise ManagerError('Eine andere Verwaltung oder Sicherung läuft bereits.') from error
             try:
+                if self.path.exists():
+                    self.data = json.loads(self.path.read_text())
                 yield
             finally:
                 fcntl.flock(handle, fcntl.LOCK_UN)

@@ -23,3 +23,6 @@ NAME=<NAME=Mein Server> # Kommentar
     def test_duplicate_rejected(self):
         with self.assertRaises(ManagerError):
             parse('x', 'A=1\nA=2')
+
+    def test_json_default_keeps_quotes(self):
+        self.assertEqual(parse('x', 'M=<M={"*":-1}>')[0].default, '{"*":-1}')
