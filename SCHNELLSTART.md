@@ -1,7 +1,7 @@
 # Schnellstart
 
 Voraussetzungen: lokaler Linux-Docker-Host, Docker Engine mit Compose-Plugin,
-Python ab 3.12, `python3-venv`, systemd für Zeitpläne; `age` für verschlüsselte
+Python ab 3.12, `python3-venv`, `openssl`, systemd für Zeitpläne; `age` für verschlüsselte
 Konfigurationsbackups. DNS der gewählten Subdomains muss auf den Server zeigen,
 Port 80/443 muss für Traefik erreichbar sein. Die CLI verwendet root für
 Mount-Zugriff und Secret-Dateirechte.

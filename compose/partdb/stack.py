@@ -30,3 +30,13 @@ def after_start(context):
     context.docker.exec('partdb', 'partdb', '/manager-entrypoint.sh', 'console',
                         'partdb:users:permissions', 'anonymous', '--edit', input='*\nD\n')
     context.docker.compose('partdb', 'up', '-d', '--no-deps', '--force-recreate', '--wait', 'partdb')
+
+
+def before_start(context):
+    from _manager.docker import run
+    from _manager.model import ManagerError
+    path = context.stacks['partdb'].path / 'secrets'
+    public_certificate = run(['openssl', 'x509', '-in', str(path / 'partdb_saml_sp_certificate'), '-pubkey', '-noout'])
+    public_key = run(['openssl', 'pkey', '-in', str(path / 'partdb_saml_sp_private_key'), '-pubout'])
+    if public_certificate.strip() != public_key.strip():
+        raise ManagerError('Part-DB: SAML-Zertifikat und privater Schlüssel gehören nicht zusammen.')
