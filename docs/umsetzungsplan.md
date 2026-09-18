@@ -33,6 +33,12 @@ Jede nummerierte Aufgabe wird separat committet; die Übertragung erfolgt zusät
 
 Automatisierte Tests für Parser, Referenzen, Abhängigkeiten, Auth-Plan,
 Archivvalidierung und Scheduler; statische Prüfung aller Stack-Vorlagen.
-Docker und eine laufende Authentik-Instanz sind in der Entwicklungsumgebung nicht
-vorhanden. Echte Containerstarts, SSO-Logins und Wiederherstellungen auf Docker
+Eine laufende Docker-Engine und Authentik-Instanz sind in der Entwicklungsumgebung nicht
+vorhanden. Die Konfiguration wurde zusätzlich mit dem offiziellen Compose-Parser geprüft. Echte Containerstarts, SSO-Logins und Wiederherstellungen auf Docker
 werden daher ausdrücklich als ausstehende Betriebsprüfung dokumentiert.
+
+## Implementierungsstand
+
+Die Aufgaben wurden in einzelnen Commits umgesetzt. Die 19 Stacks haben jeweils
+einen eigenen Übertragungscommit; danach folgen getrennte Integrationskorrekturen.
+Die noch notwendigen Live-Prüfungen sind in `validierung.md` aufgeführt.
