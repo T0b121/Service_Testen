@@ -24,7 +24,7 @@ def checks(title, values, defaults=()):
 def select_stacks(context):
     selected = checks('Stacks auswählen – core ist immer aktiv',
         [(n, s.title) for n, s in context.stacks.items() if n != 'core'],
-        [n for n in context.state.data['selected'] if n != 'core'])
+        [n for n in context.state.data.get('desired', context.state.data['selected']) if n != 'core'])
     if selected is None:
         return
     resolved = order(context.stacks, selected)

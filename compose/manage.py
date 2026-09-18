@@ -20,7 +20,7 @@ def main():
         if args.command == 'check': context.check_templates(); print('Alle Stack-Vorlagen erfolgreich geprüft.')
         elif args.command == 'list':
             for name, stack in context.stacks.items(): print(f'{name}: benötigt {", ".join(stack.requires) or "–"}')
-        elif args.command == 'setup': context.initialize(args.stacks or context.state.data['selected'])
+        elif args.command == 'setup': context.initialize(args.stacks or context.state.data.get('desired', context.state.data['selected']))
         elif args.command == 'start': context.start()
         elif args.command == 'stop': context.docker.stop(context.state.data['selected'])
         elif args.command == 'restart': context.docker.stop(context.state.data['selected']); context.start()

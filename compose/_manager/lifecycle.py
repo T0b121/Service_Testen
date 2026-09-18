@@ -78,7 +78,7 @@ class Context:
 
     def start(self):
         names = self.state.data['selected']
-        if any('setup:' + n not in self.state.data['completed'] for n in names):
+        if self.state.data.get('desired') or any('setup:' + n not in self.state.data['completed'] or 'setup:' + n in self.state.data['pending'] for n in names):
             raise ManagerError('Ersteinrichtung ist noch nicht abgeschlossen.')
         self.docker.check()
         self.docker.start(names)
