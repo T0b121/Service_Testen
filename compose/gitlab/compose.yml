@@ -1,0 +1,102 @@
+services:
+  gitlab:
+    image: gitlab/gitlab-ce:${GITLAB_VERSION}
+    container_name: gitlab
+    hostname: gitlab.${DOMAIN}
+    restart: unless-stopped
+    shm_size: 256m
+    environment:
+      TZ: Europe/Berlin
+      GITLAB_OMNIBUS_CONFIG: "external_url 'https://gitlab.${DOMAIN}'\nnginx['listen_port'] = 80\nnginx['listen_https'] =\
+        \ false\nletsencrypt['enable'] = false\ngitlab_rails['initial_root_password'] = File.read('/run/secrets/gitlab_initial_root_password').strip\n\
+        # Sicherheitsrelevante Application Settings werden idempotent durch\n# scripts/apply-security-settings.sh per GitLab-API\
+        \ gesetzt.\ngitlab_rails['omniauth_enabled'] = true\ngitlab_rails['omniauth_allow_single_sign_on'] = ['openid_connect']\n\
+        gitlab_rails['omniauth_auto_link_user'] = ['openid_connect']\ngitlab_rails['omniauth_sync_email_from_provider'] =\
+        \ 'openid_connect'\ngitlab_rails['omniauth_sync_profile_from_provider'] = ['openid_connect']\ngitlab_rails['omniauth_sync_profile_attributes']\
+        \ = ['email', 'name']\ngitlab_rails['omniauth_providers'] = [\n  {\n    'name' => 'openid_connect',\n    'label' =>\
+        \ 'Authentik',\n    'args' => {\n      'name' => 'openid_connect',\n      'scope' => ['openid', 'profile', 'email'],\n\
+        \      'response_type' => 'code',\n      'issuer' => 'https://auth.${DOMAIN}/application/o/gitlab/',\n      'discovery'\
+        \ => true,\n      'uid_field' => 'sub',\n      'client_auth_method' => 'query',\n      'pkce' => true,\n      'client_options'\
+        \ => {\n        'identifier' => '${GITLAB_OIDC_CLIENT_ID}',\n        'secret' => File.read('/run/secrets/gitlab_oidc_client_secret').strip,\n\
+        \        'redirect_uri' => 'https://gitlab.${DOMAIN}/users/auth/openid_connect/callback'\n      }\n    }\n  }\n]\n\
+        puma['worker_processes'] = 0\nsidekiq['concurrency'] = 10\ngitlab_rails['env'] = { 'MALLOC_CONF' => 'dirty_decay_ms:1000,muzzy_decay_ms:1000'\
+        \ }\ngitaly['env'] = { 'MALLOC_CONF' => 'dirty_decay_ms:1000,muzzy_decay_ms:1000' }\nalertmanager['enable'] = false\n\
+        gitlab_exporter['enable'] = false\ngitlab_kas['enable'] = false\nnode_exporter['enable'] = false\npostgres_exporter['enable']\
+        \ = false\nprometheus_monitoring['enable'] = false\nprometheus['enable'] = false\npuma['exporter_enabled'] = false\n\
+        redis_exporter['enable'] = false\nsidekiq['metrics_enabled'] = false\nmattermost['enable'] = false\ngitlab_pages['enable']\
+        \ = false\nregistry['enable'] = false\ngitlab_rails['registry_enabled'] = false\ngitlab_rails['gitlab_default_projects_features_container_registry']\
+        \ = false\n"
+    secrets:
+    - gitlab_initial_root_password
+    - gitlab_oidc_client_secret
+    volumes:
+    - gitlab_config:/etc/gitlab
+    - gitlab_logs:/var/log/gitlab
+    - gitlab_data:/var/opt/gitlab
+    expose:
+    - '80'
+    networks:
+    - web
+    healthcheck:
+      test:
+      - CMD-SHELL
+      - curl --fail --silent http://127.0.0.1/-/readiness || exit 1
+      start_period: 15m
+      interval: 30s
+      timeout: 10s
+      retries: 10
+    labels:
+      traefik.enable: 'true'
+      traefik.docker.network: web
+      traefik.http.routers.gitlab.rule: Host(`gitlab.${DOMAIN}`)
+      traefik.http.routers.gitlab.entrypoints: websecure
+      traefik.http.routers.gitlab.tls: 'true'
+      traefik.http.routers.gitlab.tls.certresolver: letsencrypt
+      traefik.http.routers.gitlab.service: gitlab
+      traefik.http.services.gitlab.loadbalancer.server.port: '80'
+      traefik.http.routers.gitlab.middlewares: authentik@docker
+      traefik.http.routers.authentik-outpost-gitlab.rule: Host(`gitlab.${DOMAIN}`) && PathPrefix(`/outpost.goauthentik.io/`)
+      traefik.http.routers.authentik-outpost-gitlab.entrypoints: websecure
+      traefik.http.routers.authentik-outpost-gitlab.tls: 'true'
+      traefik.http.routers.authentik-outpost-gitlab.tls.certresolver: letsencrypt
+      traefik.http.routers.authentik-outpost-gitlab.priority: '1000'
+      traefik.http.routers.authentik-outpost-gitlab.service: authentik@docker
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: '3'
+  gitlab-runner:
+    image: gitlab/gitlab-runner:${GITLAB_RUNNER_VERSION}
+    container_name: gitlab-runner
+    restart: unless-stopped
+    environment:
+      TZ: Europe/Berlin
+    volumes:
+    - gitlab_runner_config:/etc/gitlab-runner
+    - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+    - web
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: '3'
+networks:
+  web:
+    external: true
+    name: web
+volumes:
+  gitlab_config:
+    name: managed_gitlab_config
+  gitlab_logs:
+    name: managed_gitlab_logs
+  gitlab_data:
+    name: managed_gitlab_data
+  gitlab_runner_config:
+    name: managed_gitlab_runner_config
+secrets:
+  gitlab_initial_root_password:
+    file: ./secrets/gitlab_initial_root_password
+  gitlab_oidc_client_secret:
+    file: ./secrets/gitlab_oidc_client_secret
