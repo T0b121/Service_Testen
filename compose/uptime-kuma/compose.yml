@@ -1,0 +1,41 @@
+services:
+  uptime-kuma:
+    image: louislam/uptime-kuma:${UPTIME_KUMA_VERSION}
+    container_name: uptime-kuma
+    restart: unless-stopped
+    environment:
+      UPTIME_KUMA_ENABLE_EMBEDDED_MARIADB: '1'
+    volumes:
+    - uptime_kuma_data:/app/data
+    expose:
+    - '3001'
+    networks:
+    - web
+    labels:
+      traefik.enable: 'true'
+      traefik.docker.network: web
+      traefik.http.routers.uptime-kuma.rule: Host(`uptime.${DOMAIN}`)
+      traefik.http.routers.uptime-kuma.entrypoints: websecure
+      traefik.http.routers.uptime-kuma.tls: 'true'
+      traefik.http.routers.uptime-kuma.tls.certresolver: letsencrypt
+      traefik.http.routers.uptime-kuma.middlewares: authentik@docker
+      traefik.http.routers.uptime-kuma.service: uptime-kuma
+      traefik.http.routers.authentik-outpost-uptime-kuma.rule: Host(`uptime.${DOMAIN}`) && PathPrefix(`/outpost.goauthentik.io/`)
+      traefik.http.routers.authentik-outpost-uptime-kuma.entrypoints: websecure
+      traefik.http.routers.authentik-outpost-uptime-kuma.tls: 'true'
+      traefik.http.routers.authentik-outpost-uptime-kuma.tls.certresolver: letsencrypt
+      traefik.http.routers.authentik-outpost-uptime-kuma.service: authentik@docker
+      traefik.http.routers.authentik-outpost-uptime-kuma.priority: '100'
+      traefik.http.services.uptime-kuma.loadbalancer.server.port: '3001'
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: '3'
+networks:
+  web:
+    external: true
+    name: web
+volumes:
+  uptime_kuma_data:
+    name: managed_uptime_kuma_data
