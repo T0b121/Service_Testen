@@ -30,6 +30,8 @@ services:
     - ./scripts/partdb-entrypoint.sh:/partdb-secret-entrypoint.sh:ro
     - ./config/zz-partdb.ini:/etc/php/8.4/fpm/conf.d/99-partdb.ini:ro
     - ./config/zz-partdb.ini:/etc/php/8.4/cli/conf.d/99-partdb.ini:ro
+    - ./scripts/partdb-entrypoint.sh:/manager-entrypoint.sh:ro
+    - ./scripts/manager-groups.php:/manager-groups.php:ro
     networks:
     - web
     - partdb_internal

@@ -212,7 +212,7 @@ def import_archive(archive_path, targets, *, identity=None, replace=False):
         # Extraktion in frische temporäre Verzeichnisse, nie direkt in vorhandene Links.
         stages, completed = [], []
         try:
-            with tarfile.open(path, 'r:gz') as archive:
+            with quiesce(mounts), tarfile.open(path, 'r:gz') as archive:
                 for index, target in targets.items():
                     target = Path(target)
                     if target.is_symlink():
@@ -225,33 +225,32 @@ def import_archive(archive_path, targets, *, identity=None, replace=False):
                     members = [m for m in archive.getmembers() if m.name == prefix or m.name.startswith(prefix + '/')]
                     archive.extractall(stage, members=members, filter='fully_trusted')  # Vollständige eigene Prüfung oben.
                     staged = stage / prefix
-                    with quiesce(mounts):
-                        # Docker-Volumes: Verzeichnis selbst bleibt bestehen; Inhalt atomar je Eintrag tauschen.
-                        old = stage / 'previous'; old.mkdir()
-                        if target.exists() and target.is_dir() != staged.is_dir():
-                            raise ManagerError('Datei/Verzeichnis-Typ passt nicht zum Importziel.')
-                        if staged.is_dir():
-                            target.mkdir(exist_ok=True)
-                            previous = list(target.iterdir())
-                            for child in previous:
-                                os.replace(child, old / child.name)
-                            installed = []
-                            try:
-                                for child in staged.iterdir():
-                                    os.replace(child, target / child.name); installed.append(target / child.name)
-                                shutil.copystat(staged, target)
-                                if os.geteuid() == 0:
-                                    os.chown(target, staged.stat().st_uid, staged.stat().st_gid)
-                            except BaseException:
-                                for child in installed:
-                                    if child.is_dir() and not child.is_symlink(): shutil.rmtree(child)
-                                    else: child.unlink()
-                                for child in old.iterdir(): os.replace(child, target / child.name)
-                                raise
-                        else:
-                            if target.exists(): shutil.copy2(target, old / 'file')
-                            os.replace(staged, target)
-                        completed.append(str(target))
+                    # Docker-Volumes: Verzeichnis selbst bleibt bestehen; Inhalt atomar je Eintrag tauschen.
+                    old = stage / 'previous'; old.mkdir()
+                    if target.exists() and target.is_dir() != staged.is_dir():
+                        raise ManagerError('Datei/Verzeichnis-Typ passt nicht zum Importziel.')
+                    if staged.is_dir():
+                        target.mkdir(exist_ok=True)
+                        previous = list(target.iterdir())
+                        for child in previous:
+                            os.replace(child, old / child.name)
+                        installed = []
+                        try:
+                            for child in staged.iterdir():
+                                os.replace(child, target / child.name); installed.append(target / child.name)
+                            shutil.copystat(staged, target)
+                            if os.geteuid() == 0:
+                                os.chown(target, staged.stat().st_uid, staged.stat().st_gid)
+                        except BaseException:
+                            for child in installed:
+                                if child.is_dir() and not child.is_symlink(): shutil.rmtree(child)
+                                else: child.unlink()
+                            for child in old.iterdir(): os.replace(child, target / child.name)
+                            raise
+                    else:
+                        if target.exists(): shutil.copy2(target, old / 'file')
+                        os.replace(staged, target)
+                    completed.append(str(target))
         except BaseException as error:
             if completed:
                 raise ManagerError('Import nach Teilwiederherstellung abgebrochen. Bereits ersetzt: ' + ', '.join(completed)) from error

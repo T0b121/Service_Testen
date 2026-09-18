@@ -116,6 +116,10 @@ export SAML_SP_PRIVATE_KEY
 unset DATABASE_PASSWORD
 unset DOMAIN_REGEX
 
+if [ "${1:-}" = "manager-groups" ]; then
+    exec sudo -E -u www-data php /manager-groups.php
+fi
+
 # Konsolenbefehle mit derselben Konfiguration wie Part-DB ausführen.
 if [ "${1:-}" = "console" ]; then
     shift

@@ -27,7 +27,8 @@ def sync_user(context, action, user):
     payload = dict(user, action=action, allowed=bool(names & set(AUTH_GROUPS)), admin='gitlab-admins' in names)
     script = '''require 'json'
 p = JSON.parse(STDIN.read)
-u = User.find_by(username: p['username'])
+identity = Identity.find_by(provider: 'openid_connect', extern_uid: p['pk'].to_s)
+u = identity&.user
 if u
   if p['action'] == 'delete' || !p['is_active'] || !p['allowed']
     u.block! unless u.blocked?

@@ -44,7 +44,7 @@ def provision(auth, stack):
         provider = auth.ensure('providers/oauth2/', {'name': 'stack-manager:' + spec['slug']}, {
             **common, 'client_id': client, 'client_secret': secret, 'client_type': 'confidential',
             'signing_key': key['pk'], 'property_mappings': [*mappings, mapping['pk']],
-            'include_claims_in_id_token': True,
+            'include_claims_in_id_token': True, 'sub_mode': 'user_id',
             'redirect_uris': [{'matching_mode': 'strict', 'url': url + spec['callback']}]})
         if stack.name == 'paperless':
             config = {'openid_connect': {'APPS': [{'provider_id': 'authentik', 'name': 'Authentik',

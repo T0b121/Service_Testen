@@ -153,11 +153,15 @@ class Authentik:
                     raise ValueError('Kein gültiges PNG oder Datei zu groß')
                 path.write_bytes(data)
             data = path.read_bytes()
-            boundary = 'stackmanager' + secrets.token_hex(12)
-            body = (f'--{boundary}\r\nContent-Disposition: form-data; name="file"; filename="icon.png"\r\n'
-                    'Content-Type: image/png\r\n\r\n').encode() + data + f'\r\n--{boundary}--\r\n'.encode()
-            self.request('POST', f'core/applications/{slug}/set_icon/', raw=body,
-                         content_type=f'multipart/form-data; boundary={boundary}')
+            filename = 'stack-manager-' + hashlib.sha256(data).hexdigest() + '.png'
+            existing = self.request('GET', 'admin/file/?usage=media')
+            if not any(x['name'] == filename for x in existing):
+                boundary = 'stackmanager' + secrets.token_hex(12)
+                body = (f'--{boundary}\r\nContent-Disposition: form-data; name="file"; filename="{filename}"\r\n'
+                        'Content-Type: image/png\r\n\r\n').encode() + data + f'\r\n--{boundary}--\r\n'.encode()
+                self.request('POST', 'admin/file/', raw=body,
+                             content_type=f'multipart/form-data; boundary={boundary}')
+            self.request('PATCH', f'core/applications/{slug}/', {'meta_icon': filename})
             self.state.data['pending'].pop('icon:' + slug, None)
         except (OSError, ValueError, ManagerError):
             # Ohne Icon bleibt Authentiks Standardicon erhalten.
