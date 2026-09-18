@@ -71,6 +71,8 @@ services:
       options:
         max-size: 10m
         max-file: '3'
+    group_add:
+    - '60001'
 networks:
   web:
     external: true

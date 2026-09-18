@@ -46,6 +46,8 @@ services:
       options:
         max-size: 10m
         max-file: '3'
+    group_add:
+    - '60001'
   neo4j-mcp:
     image: neo4j/mcp:${NEO4J_MCP_VERSION}
     container_name: neo4j-mcp

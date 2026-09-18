@@ -69,6 +69,8 @@ services:
       options:
         max-size: 10m
         max-file: '3'
+    group_add:
+    - '60001'
   nextcloud-cron:
     image: nextcloud:${NEXTCLOUD_VERSION}
     container_name: nextcloud-cron
@@ -113,6 +115,8 @@ services:
       options:
         max-size: 10m
         max-file: '3'
+    group_add:
+    - '60001'
   nextcloud-redis:
     image: redis:${REDIS_VERSION}
     container_name: nextcloud-redis
@@ -205,6 +209,8 @@ services:
       options:
         max-size: 10m
         max-file: '3'
+    group_add:
+    - '60001'
 networks:
   web:
     external: true

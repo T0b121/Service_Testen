@@ -6,6 +6,7 @@ from .docker import Docker, validate_exposure
 from .model import discover, order, ManagerError
 from .sso import provision
 from .state import State
+from .permissions import ensure_secret_group, prepare_secrets
 
 
 class Context:
@@ -32,6 +33,7 @@ class Context:
         selected = order(self.stacks, selected)
         self.check_templates()
         self.docker.check()
+        ensure_secret_group()
         print('Einrichtungsreihenfolge: ' + ' → '.join(selected))
         cfg = Configuration(self.stacks, selected)
         cfg.collect()
@@ -42,6 +44,7 @@ class Context:
         bootstrap_files(self.stacks['core'], self.state)
         self.state.data['desired'] = selected
         self.state.save()
+        prepare_secrets(self.stacks['core'])
         self.docker.start(['core'])
         finish_bootstrap(self.stacks['core'], self.state, self.auth)
         for name in selected:
@@ -52,6 +55,7 @@ class Context:
             self.docker.resources(name)
             self.auth.forward_auth(stack)
             provision(self.auth, stack)
+            prepare_secrets(stack)
             hook = getattr(stack.module, 'before_start', None)
             if hook:
                 hook(self)

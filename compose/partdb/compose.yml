@@ -59,6 +59,8 @@ services:
       options:
         max-size: 10m
         max-file: '3'
+    group_add:
+    - '60001'
   mariadb:
     image: mariadb:${MARIADB_VERSION}
     container_name: partdb-mariadb
@@ -90,6 +92,8 @@ services:
       options:
         max-size: 10m
         max-file: '3'
+    group_add:
+    - '60001'
 networks:
   web:
     external: true

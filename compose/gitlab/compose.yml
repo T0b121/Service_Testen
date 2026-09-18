@@ -66,6 +66,8 @@ services:
       options:
         max-size: 10m
         max-file: '3'
+    group_add:
+    - '60001'
   gitlab-runner:
     image: gitlab/gitlab-runner:${GITLAB_RUNNER_VERSION}
     container_name: gitlab-runner

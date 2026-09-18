@@ -33,9 +33,15 @@ def inventory(docker, stack, service):
         source, name = mount.get('source', ''), ''
         if kind == 'volume':
             if not source:
-                result.append(Mount('', mount['target'], kind, eligible=False, reason='Anonymes Volume benötigt laufenden Container zur Zuordnung.'))
-                continue
-            name = data['volumes'][source]['name']
+                ids = docker.compose(stack, 'ps', '-a', '-q', service).split()
+                observed = json.loads(run(['docker', 'inspect', *ids])) if ids else []
+                names = {m['Name'] for c in observed for m in c.get('Mounts', []) if m.get('Destination') == mount['target'] and m.get('Name')}
+                if len(names) != 1:
+                    result.append(Mount('', mount['target'], kind, eligible=False, reason='Anonymes Volume nicht eindeutig auflösbar.'))
+                    continue
+                name = names.pop()
+            else:
+                name = data['volumes'][source]['name']
             source = json.loads(run(['docker', 'volume', 'inspect', name]))[0]['Mountpoint']
         path = Path(source)
         reason = ''

@@ -88,6 +88,8 @@ services:
       options:
         max-size: 10m
         max-file: '3'
+    group_add:
+    - '60001'
   paperless-postgresql:
     image: postgres:${POSTGRES_VERSION}
     container_name: paperless-postgresql
@@ -115,6 +117,8 @@ services:
       options:
         max-size: 10m
         max-file: '3'
+    group_add:
+    - '60001'
   paperless-valkey:
     image: valkey/valkey:${VALKEY_VERSION}
     container_name: paperless-valkey
