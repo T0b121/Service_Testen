@@ -1,0 +1,57 @@
+services:
+  qdrant:
+    image: qdrant/qdrant:${QDRANT_VERSION}
+    container_name: qdrant
+    restart: unless-stopped
+    environment:
+      QDRANT__SERVICE__API_KEY: ${QDRANT_API_KEY:?QDRANT_API_KEY must be set in .env}
+    volumes:
+    - qdrant_storage:/qdrant/storage
+    expose:
+    - '6333'
+    - '6334'
+    networks:
+    - web
+    - qdrant_clients
+    healthcheck:
+      test:
+      - CMD-SHELL
+      - bash -c '</dev/tcp/127.0.0.1/6333'
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 20s
+    labels:
+      traefik.enable: 'true'
+      traefik.docker.network: web
+      traefik.http.routers.qdrant.rule: Host(`qdrant.${DOMAIN}`)
+      traefik.http.routers.qdrant.entrypoints: websecure
+      traefik.http.routers.qdrant.tls: 'true'
+      traefik.http.routers.qdrant.tls.certresolver: letsencrypt
+      traefik.http.routers.qdrant.middlewares: authentik@docker,qdrant-dashboard@docker
+      traefik.http.routers.qdrant.service: qdrant
+      traefik.http.routers.authentik-outpost-qdrant.rule: Host(`qdrant.${DOMAIN}`) && PathPrefix(`/outpost.goauthentik.io/`)
+      traefik.http.routers.authentik-outpost-qdrant.entrypoints: websecure
+      traefik.http.routers.authentik-outpost-qdrant.tls: 'true'
+      traefik.http.routers.authentik-outpost-qdrant.tls.certresolver: letsencrypt
+      traefik.http.routers.authentik-outpost-qdrant.service: authentik@docker
+      traefik.http.routers.authentik-outpost-qdrant.priority: '100'
+      traefik.http.services.qdrant.loadbalancer.server.port: '6333'
+      traefik.http.middlewares.qdrant-dashboard.redirectregex.regex: ^https?://qdrant\.${DOMAIN}/$$
+      traefik.http.middlewares.qdrant-dashboard.redirectregex.replacement: https://qdrant.${DOMAIN}/dashboard/
+      traefik.http.middlewares.qdrant-dashboard.redirectregex.permanent: 'false'
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: '3'
+networks:
+  web:
+    external: true
+    name: web
+  qdrant_clients:
+    external: true
+    name: qdrant_clients
+volumes:
+  qdrant_storage:
+    name: managed_qdrant_storage
