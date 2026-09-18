@@ -1,0 +1,103 @@
+services:
+  rustfs:
+    image: rustfs/rustfs:${RUSTFS_VERSION}
+    container_name: rustfs
+    restart: unless-stopped
+    security_opt:
+    - no-new-privileges:true
+    environment:
+      RUSTFS_VOLUMES: /data
+      RUSTFS_ADDRESS: 0.0.0.0:9000
+      RUSTFS_CONSOLE_ADDRESS: 0.0.0.0:9001
+      RUSTFS_CONSOLE_ENABLE: 'true'
+      RUSTFS_ACCESS_KEY_FILE: /run/secrets/rustfs_root_access_key
+      RUSTFS_SECRET_KEY_FILE: /run/secrets/rustfs_root_secret_key
+      RUSTFS_BROWSER_REDIRECT_URL: https://s3.${DOMAIN}
+      RUSTFS_IDENTITY_OPENID_ENABLE: 'on'
+      RUSTFS_IDENTITY_OPENID_CONFIG_URL: https://auth.${DOMAIN}/application/o/rustfs-console/
+      RUSTFS_IDENTITY_OPENID_CLIENT_ID: ${RUSTFS_OIDC_CLIENT_ID}
+      RUSTFS_IDENTITY_OPENID_SCOPES: openid,profile,email
+      RUSTFS_IDENTITY_OPENID_REDIRECT_URI: https://s3.${DOMAIN}/rustfs/admin/v3/oidc/callback/default
+      RUSTFS_IDENTITY_OPENID_REDIRECT_URI_DYNAMIC: 'off'
+      RUSTFS_IDENTITY_OPENID_DISPLAY_NAME: Authentik
+      RUSTFS_IDENTITY_OPENID_GROUPS_CLAIM: groups
+      RUSTFS_IDENTITY_OPENID_USERNAME_CLAIM: preferred_username
+      RUSTFS_IDENTITY_OPENID_EMAIL_CLAIM: email
+      RUSTFS_IDENTITY_OPENID_ROLE_POLICY: consoleAdmin
+    entrypoint:
+    - /bin/sh
+    - -ec
+    - export RUSTFS_IDENTITY_OPENID_CLIENT_SECRET="$$(cat /run/secrets/rustfs_oidc_client_secret)"; exec /entrypoint.sh rustfs
+    secrets:
+    - rustfs_root_access_key
+    - rustfs_root_secret_key
+    - rustfs_oidc_client_secret
+    volumes:
+    - rustfs_data:/data
+    expose:
+    - '9000'
+    - '9001'
+    networks:
+    - web
+    - rustfs_clients
+    healthcheck:
+      test:
+      - CMD-SHELL
+      - curl -fsS http://127.0.0.1:9000/health >/dev/null && curl -fsS http://127.0.0.1:9001/rustfs/console/health >/dev/null
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 45s
+    labels:
+      traefik.enable: 'true'
+      traefik.docker.network: web
+      traefik.http.routers.rustfs.rule: Host(`s3.${DOMAIN}`)
+      traefik.http.routers.rustfs.entrypoints: websecure
+      traefik.http.routers.rustfs.tls: 'true'
+      traefik.http.routers.rustfs.tls.certresolver: letsencrypt
+      traefik.http.routers.rustfs.middlewares: authentik@docker,rustfs-console-root@docker
+      traefik.http.routers.rustfs.service: rustfs-api
+      traefik.http.routers.rustfs-console.rule: Host(`s3.${DOMAIN}`) && PathPrefix(`/rustfs/console`)
+      traefik.http.routers.rustfs-console.entrypoints: websecure
+      traefik.http.routers.rustfs-console.tls: 'true'
+      traefik.http.routers.rustfs-console.tls.certresolver: letsencrypt
+      traefik.http.routers.rustfs-console.priority: '100'
+      traefik.http.routers.rustfs-console.middlewares: authentik@docker
+      traefik.http.routers.rustfs-console.service: rustfs-console
+      traefik.http.routers.authentik-outpost-rustfs.rule: Host(`s3.${DOMAIN}`) && PathPrefix(`/outpost.goauthentik.io/`)
+      traefik.http.routers.authentik-outpost-rustfs.entrypoints: websecure
+      traefik.http.routers.authentik-outpost-rustfs.tls: 'true'
+      traefik.http.routers.authentik-outpost-rustfs.tls.certresolver: letsencrypt
+      traefik.http.routers.authentik-outpost-rustfs.priority: '200'
+      traefik.http.routers.authentik-outpost-rustfs.service: authentik@docker
+      traefik.http.services.rustfs-console.loadbalancer.server.port: '9001'
+      traefik.http.services.rustfs-api.loadbalancer.server.port: '9000'
+      traefik.http.middlewares.rustfs-console-root.redirectregex.regex: ^https?://s3\.${DOMAIN}/$$
+      traefik.http.middlewares.rustfs-console-root.redirectregex.replacement: https://s3.${DOMAIN}/rustfs/console/index.html
+      traefik.http.middlewares.rustfs-console-root.redirectregex.permanent: 'false'
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: '3'
+networks:
+  web:
+    external: true
+    name: web
+  rustfs_clients:
+    external: true
+    name: rustfs_clients
+volumes:
+  rustfs_data:
+    name: managed_rustfs_data
+secrets:
+  rustfs_root_access_key:
+    file: ./secrets/rustfs_root_access_key
+  rustfs_root_secret_key:
+    file: ./secrets/rustfs_root_secret_key
+  rustfs_oidc_client_secret:
+    file: ./secrets/rustfs_oidc_client_secret
+  langfuse_s3_access_key:
+    file: ./secrets/langfuse_s3_access_key
+  langfuse_s3_secret_key:
+    file: ./secrets/langfuse_s3_secret_key
