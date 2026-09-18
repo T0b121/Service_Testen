@@ -101,3 +101,12 @@ python tests/validate_compose.py
 Die letzte Prüfung benötigt das Docker-Compose-Plugin, aber keinen laufenden
 Docker-Daemon. Sie verwendet ausschließlich temporäre Testwerte und startet nichts.
 Details und noch erforderliche Betriebsprüfungen: [docs/validierung.md](docs/validierung.md).
+
+## Interaktive Code-Analyse
+
+Die [Graphify-Analyse auf GitHub Pages](https://t0b121.github.io/Service_Testen/)
+zeigt Code-Verbindungen, Aufrufbeziehungen, einen Dateibaum und ein Stack-Inventar.
+Der analysierte Commit und die Grenzen stehen auf der Startseite.
+
+Ein committeter HTML-Snapshot liegt unter [`docs/graphify/`](docs/graphify/).
+[Build-Anleitung und Umfang](tools/graphify/README.md); offene Arbeiten: [Issue #1](https://github.com/T0b121/Service_Testen/issues/1).

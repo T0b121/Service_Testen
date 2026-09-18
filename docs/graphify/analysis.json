@@ -1,0 +1,334 @@
+{
+  "source_commit": "9ee995adf005c465712f443c3417d832826bb671",
+  "graphify_version": "0.9.63",
+  "graphify_commit": "26b02b5e3430e4ab85dd7e72c7b98836d8e65c48",
+  "scope": "Committed compose/ and tests/; local AST extraction; no semantic LLM pass",
+  "nodes": 295,
+  "edges": 728,
+  "source_files": 48,
+  "communities": 30,
+  "edge_confidence": {
+    "EXTRACTED": 698,
+    "INFERRED": 30
+  },
+  "stacks": [
+    {
+      "name": "comfyui",
+      "dependencies": [
+        "core"
+      ],
+      "services": [
+        "comfyui"
+      ],
+      "groups": [
+        "comfyui-admins",
+        "comfyui-users"
+      ],
+      "sso": "—",
+      "user_hook": false
+    },
+    {
+      "name": "core",
+      "dependencies": [],
+      "services": [
+        "authentik-server",
+        "authentik-worker",
+        "postgresql",
+        "traefik"
+      ],
+      "groups": [
+        "core-admins"
+      ],
+      "sso": "—",
+      "user_hook": false
+    },
+    {
+      "name": "flowise",
+      "dependencies": [
+        "core",
+        "litellm",
+        "qdrant",
+        "neo4j"
+      ],
+      "services": [
+        "flowise",
+        "flowise-postgresql"
+      ],
+      "groups": [
+        "flowise-admins",
+        "flowise-users"
+      ],
+      "sso": "—",
+      "user_hook": false
+    },
+    {
+      "name": "gitlab",
+      "dependencies": [
+        "core"
+      ],
+      "services": [
+        "gitlab",
+        "gitlab-runner"
+      ],
+      "groups": [
+        "gitlab-admins",
+        "gitlab-users"
+      ],
+      "sso": "oidc",
+      "user_hook": true
+    },
+    {
+      "name": "jellyfin",
+      "dependencies": [
+        "core"
+      ],
+      "services": [
+        "jellyfin"
+      ],
+      "groups": [
+        "jellyfin-admins",
+        "jellyfin-users"
+      ],
+      "sso": "—",
+      "user_hook": false
+    },
+    {
+      "name": "langfuse",
+      "dependencies": [
+        "core",
+        "rustfs"
+      ],
+      "services": [
+        "langfuse",
+        "langfuse-clickhouse",
+        "langfuse-postgresql",
+        "langfuse-valkey",
+        "langfuse-worker"
+      ],
+      "groups": [
+        "langfuse-admins",
+        "langfuse-users"
+      ],
+      "sso": "oidc",
+      "user_hook": false
+    },
+    {
+      "name": "litellm",
+      "dependencies": [
+        "core",
+        "langfuse",
+        "ollama",
+        "localai"
+      ],
+      "services": [
+        "litellm",
+        "litellm-postgresql"
+      ],
+      "groups": [
+        "litellm-admins",
+        "litellm-users"
+      ],
+      "sso": "oidc",
+      "user_hook": false
+    },
+    {
+      "name": "localai",
+      "dependencies": [
+        "core"
+      ],
+      "services": [
+        "localai"
+      ],
+      "groups": [
+        "localai-admins",
+        "localai-users"
+      ],
+      "sso": "oidc",
+      "user_hook": false
+    },
+    {
+      "name": "n8n",
+      "dependencies": [
+        "core",
+        "litellm",
+        "qdrant",
+        "neo4j",
+        "searxng"
+      ],
+      "services": [
+        "n8n",
+        "n8n-postgresql",
+        "n8n-runners"
+      ],
+      "groups": [
+        "n8n-admins",
+        "n8n-users"
+      ],
+      "sso": "—",
+      "user_hook": false
+    },
+    {
+      "name": "neo4j",
+      "dependencies": [
+        "core"
+      ],
+      "services": [
+        "neo4j",
+        "neo4j-mcp"
+      ],
+      "groups": [
+        "neo4j-admins",
+        "neo4j-users"
+      ],
+      "sso": "—",
+      "user_hook": false
+    },
+    {
+      "name": "nextcloud",
+      "dependencies": [
+        "core"
+      ],
+      "services": [
+        "jellyfin-media-permissions",
+        "nextcloud",
+        "nextcloud-cron",
+        "nextcloud-postgresql",
+        "nextcloud-redis",
+        "onlyoffice"
+      ],
+      "groups": [
+        "nextcloud-admins",
+        "nextcloud-users"
+      ],
+      "sso": "oidc",
+      "user_hook": true
+    },
+    {
+      "name": "ollama",
+      "dependencies": [
+        "core"
+      ],
+      "services": [
+        "ollama"
+      ],
+      "groups": [
+        "ollama-admins",
+        "ollama-users"
+      ],
+      "sso": "—",
+      "user_hook": false
+    },
+    {
+      "name": "open-webui",
+      "dependencies": [
+        "core",
+        "litellm",
+        "searxng"
+      ],
+      "services": [
+        "open-webui"
+      ],
+      "groups": [
+        "open-webui-admins",
+        "open-webui-users"
+      ],
+      "sso": "oidc",
+      "user_hook": false
+    },
+    {
+      "name": "paperless",
+      "dependencies": [
+        "core"
+      ],
+      "services": [
+        "paperless",
+        "paperless-postgresql",
+        "paperless-valkey"
+      ],
+      "groups": [
+        "paperless-admins",
+        "paperless-users"
+      ],
+      "sso": "oidc",
+      "user_hook": true
+    },
+    {
+      "name": "partdb",
+      "dependencies": [
+        "core"
+      ],
+      "services": [
+        "mariadb",
+        "partdb"
+      ],
+      "groups": [
+        "partdb-admin",
+        "partdb-editor",
+        "partdb-readonly"
+      ],
+      "sso": "saml",
+      "user_hook": false
+    },
+    {
+      "name": "qdrant",
+      "dependencies": [
+        "core"
+      ],
+      "services": [
+        "qdrant"
+      ],
+      "groups": [
+        "qdrant-admins",
+        "qdrant-users"
+      ],
+      "sso": "—",
+      "user_hook": false
+    },
+    {
+      "name": "rustfs",
+      "dependencies": [
+        "core"
+      ],
+      "services": [
+        "rustfs"
+      ],
+      "groups": [
+        "rustfs-admins",
+        "rustfs-users"
+      ],
+      "sso": "oidc",
+      "user_hook": false
+    },
+    {
+      "name": "searxng",
+      "dependencies": [
+        "core"
+      ],
+      "services": [
+        "searxng",
+        "searxng-valkey"
+      ],
+      "groups": [
+        "searxng-admins",
+        "searxng-users"
+      ],
+      "sso": "—",
+      "user_hook": false
+    },
+    {
+      "name": "uptime-kuma",
+      "dependencies": [
+        "core"
+      ],
+      "services": [
+        "uptime-kuma"
+      ],
+      "groups": [
+        "uptime-kuma-admins",
+        "uptime-kuma-users"
+      ],
+      "sso": "—",
+      "user_hook": false
+    }
+  ]
+}

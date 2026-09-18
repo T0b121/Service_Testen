@@ -1,0 +1,50 @@
+name: Graphify analysis and Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: graphify-pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: tools/graphify/requirements.txt
+      - name: Install pinned Graphify dependencies
+        run: python -m pip install -r tools/graphify/requirements.txt
+      - name: Analyze committed source and build HTML
+        run: python tools/graphify/build.py --ref "$GITHUB_SHA" --output _site
+      - name: Upload only generated public analysis
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/configure-pages@v5
+      - name: Deploy analysis
+        id: deployment
+        uses: actions/deploy-pages@v4

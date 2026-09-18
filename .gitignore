@@ -19,3 +19,6 @@ compose/_cache/
 **/__pycache__/
 *.pyc
 .venv/
+
+# Generierte Pages-Builds (committeter Snapshot: docs/graphify)
+_site/
