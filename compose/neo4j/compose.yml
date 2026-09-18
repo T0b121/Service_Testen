@@ -1,0 +1,87 @@
+services:
+  neo4j:
+    image: neo4j:${NEO4J_VERSION}
+    container_name: neo4j
+    restart: unless-stopped
+    environment:
+      NEO4J_AUTH_FILE: /run/secrets/neo4j_auth
+      NEO4J_PLUGINS: '["apoc"]'
+    secrets:
+    - neo4j_auth
+    volumes:
+    - neo4j_data:/data
+    - neo4j_logs:/logs
+    expose:
+    - '7474'
+    - '7687'
+    networks:
+    - web
+    - neo4j_clients
+    healthcheck:
+      test:
+      - CMD-SHELL
+      - wget --no-verbose --tries=1 --spider http://127.0.0.1:7474 || exit 1
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    labels:
+      traefik.enable: 'true'
+      traefik.docker.network: web
+      traefik.http.routers.neo4j.rule: Host(`neo4j.${DOMAIN}`)
+      traefik.http.routers.neo4j.entrypoints: websecure
+      traefik.http.routers.neo4j.tls: 'true'
+      traefik.http.routers.neo4j.tls.certresolver: letsencrypt
+      traefik.http.routers.neo4j.middlewares: authentik@docker
+      traefik.http.routers.neo4j.service: neo4j
+      traefik.http.routers.authentik-outpost-neo4j.rule: Host(`neo4j.${DOMAIN}`) && PathPrefix(`/outpost.goauthentik.io/`)
+      traefik.http.routers.authentik-outpost-neo4j.entrypoints: websecure
+      traefik.http.routers.authentik-outpost-neo4j.tls: 'true'
+      traefik.http.routers.authentik-outpost-neo4j.tls.certresolver: letsencrypt
+      traefik.http.routers.authentik-outpost-neo4j.service: authentik@docker
+      traefik.http.routers.authentik-outpost-neo4j.priority: '100'
+      traefik.http.services.neo4j.loadbalancer.server.port: '7474'
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: '3'
+    group_add:
+    - '60001'
+  neo4j-mcp:
+    image: neo4j/mcp:${NEO4J_MCP_VERSION}
+    container_name: neo4j-mcp
+    restart: unless-stopped
+    environment:
+      NEO4J_TRANSPORT_MODE: http
+      NEO4J_MCP_HTTP_HOST: 0.0.0.0
+      NEO4J_MCP_HTTP_PORT: '80'
+      NEO4J_TELEMETRY: 'false'
+      NEO4J_LOG_FORMAT: json
+    depends_on:
+      neo4j:
+        condition: service_healthy
+    expose:
+    - '80'
+    networks:
+    - neo4j_clients
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: '3'
+networks:
+  web:
+    external: true
+    name: web
+  neo4j_clients:
+    external: true
+    name: neo4j_clients
+volumes:
+  neo4j_data:
+    name: managed_neo4j_data
+  neo4j_logs:
+    name: managed_neo4j_logs
+secrets:
+  neo4j_auth:
+    file: ./secrets/neo4j_auth

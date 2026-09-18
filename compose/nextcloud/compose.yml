@@ -1,0 +1,253 @@
+services:
+  nextcloud:
+    image: nextcloud:${NEXTCLOUD_VERSION}
+    container_name: nextcloud
+    restart: unless-stopped
+    environment:
+      POSTGRES_HOST: nextcloud-postgresql
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgresql_password
+      REDIS_HOST: nextcloud-redis
+      NEXTCLOUD_ADMIN_USER: ${NEXTCLOUD_ADMIN_USER}
+      NEXTCLOUD_ADMIN_PASSWORD_FILE: /run/secrets/nextcloud_admin_password
+      NEXTCLOUD_TRUSTED_DOMAINS: cloud.${DOMAIN} nextcloud
+      TRUSTED_PROXIES: 172.16.0.0/12
+      OVERWRITEHOST: cloud.${DOMAIN}
+      OVERWRITEPROTOCOL: https
+      OVERWRITECLIURL: https://cloud.${DOMAIN}
+      PHP_MEMORY_LIMIT: ${PHP_MEMORY_LIMIT}
+      PHP_UPLOAD_LIMIT: ${PHP_UPLOAD_LIMIT}
+    secrets:
+    - postgresql_password
+    - nextcloud_admin_password
+    - nextcloud_oidc_client_secret
+    volumes:
+    - nextcloud_html:/var/www/html
+    - jellyfin_media:/mnt/jellyfin
+    expose:
+    - '80'
+    networks:
+    - web
+    - nextcloud_internal
+    depends_on:
+      nextcloud-postgresql:
+        condition: service_healthy
+      nextcloud-redis:
+        condition: service_healthy
+      jellyfin-media-permissions:
+        condition: service_completed_successfully
+    healthcheck:
+      test:
+      - CMD-SHELL
+      - curl --fail --silent http://localhost/status.php | grep -q '"installed":true'
+      start_period: 60s
+      interval: 30s
+      timeout: 10s
+      retries: 10
+    labels:
+      traefik.enable: 'true'
+      traefik.docker.network: web
+      traefik.http.routers.nextcloud.rule: Host(`cloud.${DOMAIN}`)
+      traefik.http.routers.nextcloud.entrypoints: websecure
+      traefik.http.routers.nextcloud.tls: 'true'
+      traefik.http.routers.nextcloud.tls.certresolver: letsencrypt
+      traefik.http.routers.nextcloud.middlewares: authentik@docker,nextcloud-wellknown@docker
+      traefik.http.routers.nextcloud.service: nextcloud
+      traefik.http.services.nextcloud.loadbalancer.server.port: '80'
+      traefik.http.middlewares.nextcloud-wellknown.redirectregex.regex: ^https://cloud\.${DOMAIN}/\.well-known/(card|cal)dav
+      traefik.http.middlewares.nextcloud-wellknown.redirectregex.replacement: https://cloud.${DOMAIN}/remote.php/dav/
+      traefik.http.middlewares.nextcloud-wellknown.redirectregex.permanent: 'true'
+      traefik.http.routers.authentik-outpost-nextcloud.rule: Host(`cloud.${DOMAIN}`) && PathPrefix(`/outpost.goauthentik.io/`)
+      traefik.http.routers.authentik-outpost-nextcloud.entrypoints: websecure
+      traefik.http.routers.authentik-outpost-nextcloud.tls: 'true'
+      traefik.http.routers.authentik-outpost-nextcloud.tls.certresolver: letsencrypt
+      traefik.http.routers.authentik-outpost-nextcloud.priority: '1000'
+      traefik.http.routers.authentik-outpost-nextcloud.service: authentik@docker
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: '3'
+    group_add:
+    - '60001'
+  nextcloud-cron:
+    image: nextcloud:${NEXTCLOUD_VERSION}
+    container_name: nextcloud-cron
+    restart: unless-stopped
+    entrypoint: /cron.sh
+    volumes:
+    - nextcloud_html:/var/www/html
+    networks:
+    - nextcloud_internal
+    depends_on:
+      nextcloud:
+        condition: service_healthy
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: '3'
+  nextcloud-postgresql:
+    image: postgres:${POSTGRES_VERSION}
+    container_name: nextcloud-postgresql
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgresql_password
+    secrets:
+    - postgresql_password
+    volumes:
+    - nextcloud_postgresql_data:/var/lib/postgresql
+    networks:
+    - nextcloud_internal
+    healthcheck:
+      test:
+      - CMD-SHELL
+      - pg_isready -d "$${POSTGRES_DB}" -U "$${POSTGRES_USER}"
+      start_period: 30s
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: '3'
+    group_add:
+    - '60001'
+  nextcloud-redis:
+    image: redis:${REDIS_VERSION}
+    container_name: nextcloud-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    volumes:
+    - nextcloud_redis_data:/data
+    networks:
+    - nextcloud_internal
+    healthcheck:
+      test:
+      - CMD
+      - redis-cli
+      - ping
+      start_period: 10s
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: '3'
+  jellyfin-media-permissions:
+    image: alpine:${ALPINE_VERSION}
+    container_name: nextcloud-jellyfin-media-permissions
+    restart: 'no'
+    command:
+    - /bin/sh
+    - -ec
+    - chown -R 33:0 /media
+    volumes:
+    - jellyfin_media:/media
+    networks:
+    - nextcloud_internal
+  onlyoffice:
+    image: onlyoffice/documentserver:${ONLYOFFICE_VERSION}
+    container_name: nextcloud-onlyoffice
+    restart: unless-stopped
+    environment:
+      JWT_ENABLED: 'true'
+      JWT_HEADER: AuthorizationJwt
+      ALLOW_PRIVATE_IP_ADDRESS: 'true'
+      USE_UNAUTHORIZED_STORAGE: 'false'
+    entrypoint:
+    - /bin/sh
+    - /onlyoffice-secret-entrypoint.sh
+    secrets:
+    - onlyoffice_jwt_secret
+    volumes:
+    - onlyoffice_data:/var/www/onlyoffice/Data
+    - onlyoffice_logs:/var/log/onlyoffice
+    - onlyoffice_lib:/var/lib/onlyoffice
+    - onlyoffice_postgresql_data:/var/lib/postgresql
+    - onlyoffice_rabbitmq_data:/var/lib/rabbitmq
+    - onlyoffice_redis_data:/var/lib/redis
+    - onlyoffice_custom_fonts:/usr/share/fonts/truetype/custom
+    - ./scripts/onlyoffice-entrypoint.sh:/onlyoffice-secret-entrypoint.sh:ro
+    expose:
+    - '80'
+    networks:
+    - web
+    - nextcloud_internal
+    labels:
+      traefik.enable: 'true'
+      traefik.docker.network: web
+      traefik.http.routers.onlyoffice.rule: Host(`office.${DOMAIN}`)
+      traefik.http.routers.onlyoffice.entrypoints: websecure
+      traefik.http.routers.onlyoffice.tls: 'true'
+      traefik.http.routers.onlyoffice.tls.certresolver: letsencrypt
+      traefik.http.routers.onlyoffice.middlewares: authentik@docker
+      traefik.http.routers.onlyoffice.service: onlyoffice
+      traefik.http.services.onlyoffice.loadbalancer.server.port: '80'
+      traefik.http.routers.authentik-outpost-onlyoffice.rule: Host(`office.${DOMAIN}`) && PathPrefix(`/outpost.goauthentik.io/`)
+      traefik.http.routers.authentik-outpost-onlyoffice.entrypoints: websecure
+      traefik.http.routers.authentik-outpost-onlyoffice.tls: 'true'
+      traefik.http.routers.authentik-outpost-onlyoffice.tls.certresolver: letsencrypt
+      traefik.http.routers.authentik-outpost-onlyoffice.service: authentik@docker
+      traefik.http.routers.authentik-outpost-onlyoffice.priority: '100'
+    healthcheck:
+      test:
+      - CMD-SHELL
+      - curl --fail --silent http://localhost/healthcheck >/dev/null
+      start_period: 90s
+      interval: 30s
+      timeout: 10s
+      retries: 10
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: '3'
+    group_add:
+    - '60001'
+networks:
+  web:
+    external: true
+    name: web
+  nextcloud_internal:
+    name: nextcloud_internal
+    internal: true
+volumes:
+  nextcloud_html:
+    name: managed_nextcloud_html
+  nextcloud_postgresql_data:
+    name: managed_nextcloud_postgresql_data
+  nextcloud_redis_data:
+    name: managed_nextcloud_redis_data
+  onlyoffice_data:
+    name: managed_nextcloud_onlyoffice_data
+  onlyoffice_logs:
+    name: managed_nextcloud_onlyoffice_logs
+  onlyoffice_lib:
+    name: managed_nextcloud_onlyoffice_lib
+  onlyoffice_postgresql_data:
+    name: managed_nextcloud_onlyoffice_postgresql_data
+  onlyoffice_rabbitmq_data:
+    name: managed_nextcloud_onlyoffice_rabbitmq_data
+  onlyoffice_redis_data:
+    name: managed_nextcloud_onlyoffice_redis_data
+  onlyoffice_custom_fonts:
+    name: managed_nextcloud_onlyoffice_custom_fonts
+  jellyfin_media:
+    external: true
+    name: managed_jellyfin_media
+secrets:
+  postgresql_password:
+    file: ./secrets/postgresql_password
+  nextcloud_admin_password:
+    file: ./secrets/nextcloud_admin_password
+  onlyoffice_jwt_secret:
+    file: ./secrets/onlyoffice_jwt_secret
+  nextcloud_oidc_client_secret:
+    file: ./secrets/nextcloud_oidc_client_secret

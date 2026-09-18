@@ -11,3 +11,11 @@ secrets/
 
 # Traefik ACME-Dateien
 acme*.json
+
+# Stack-Manager (lokaler Zustand und Sicherungen)
+compose/_state/
+compose/_backup/
+compose/_cache/
+**/__pycache__/
+*.pyc
+.venv/

@@ -1,0 +1,173 @@
+services:
+  paperless:
+    image: ghcr.io/paperless-ngx/paperless-ngx:${PAPERLESS_VERSION}
+    container_name: paperless
+    restart: unless-stopped
+    environment:
+      TZ: Europe/Berlin
+      USERMAP_UID: '1000'
+      USERMAP_GID: '1000'
+      PAPERLESS_REDIS: redis://paperless-valkey:6379
+      PAPERLESS_DBENGINE: postgresql
+      PAPERLESS_DBHOST: paperless-postgresql
+      PAPERLESS_DBPORT: '5432'
+      PAPERLESS_DBNAME: ${PAPERLESS_DB_NAME}
+      PAPERLESS_DBUSER: ${PAPERLESS_DB_USER}
+      PAPERLESS_DBPASS_FILE: /run/secrets/postgresql_password
+      PAPERLESS_SECRET_KEY_FILE: /run/secrets/paperless_secret_key
+      PAPERLESS_URL: https://paperless.${DOMAIN}
+      PAPERLESS_TIME_ZONE: Europe/Berlin
+      PAPERLESS_OCR_LANGUAGE: deu+eng
+      PAPERLESS_OCR_MODE: skip
+      PAPERLESS_OCR_OUTPUT_TYPE: pdfa
+      PAPERLESS_TASK_WORKERS: '2'
+      PAPERLESS_THREADS_PER_WORKER: '2'
+      PAPERLESS_CONSUMER_RECURSIVE: 'true'
+      PAPERLESS_CONSUMER_SUBDIRS_AS_TAGS: 'true'
+      PAPERLESS_CONSUMER_DELETE_DUPLICATES: 'true'
+      PAPERLESS_ADMIN_USER: ${PAPERLESS_ADMIN_USER}
+      PAPERLESS_ADMIN_MAIL: ${PAPERLESS_ADMIN_MAIL}
+      PAPERLESS_ADMIN_PASSWORD_FILE: /run/secrets/paperless_admin_password
+      PAPERLESS_APPS: allauth.socialaccount.providers.openid_connect
+      PAPERLESS_SOCIALACCOUNT_PROVIDERS_FILE: /run/secrets/paperless_socialaccount_providers
+      PAPERLESS_SOCIAL_AUTO_SIGNUP: 'true'
+      PAPERLESS_SOCIALACCOUNT_ALLOW_SIGNUPS: 'true'
+      PAPERLESS_SOCIAL_ACCOUNT_SYNC_GROUPS: 'true'
+      PAPERLESS_SOCIAL_ACCOUNT_SYNC_GROUPS_CLAIM: groups
+      PAPERLESS_SOCIAL_ACCOUNT_SYNC_SUPERUSER_GROUP: paperless-admins
+      PAPERLESS_SOCIAL_ACCOUNT_SYNC_STAFF_GROUP: paperless-admins
+      PAPERLESS_ACCOUNT_EMAIL_VERIFICATION: none
+      PAPERLESS_USE_X_FORWARD_HOST: 'true'
+      PAPERLESS_PROXY_SSL_HEADER: '["HTTP_X_FORWARDED_PROTO", "https"]'
+    secrets:
+    - postgresql_password
+    - paperless_secret_key
+    - paperless_admin_password
+    - paperless_socialaccount_providers
+    volumes:
+    - paperless_data:/usr/src/paperless/data
+    - paperless_media:/usr/src/paperless/media
+    - paperless_consume:/usr/src/paperless/consume
+    - paperless_export:/usr/src/paperless/export
+    expose:
+    - '8000'
+    networks:
+    - web
+    - paperless_internal
+    depends_on:
+      paperless-postgresql:
+        condition: service_healthy
+      paperless-valkey:
+        condition: service_healthy
+    healthcheck:
+      test:
+      - CMD-SHELL
+      - curl --fail --silent http://localhost:8000/ >/dev/null
+      start_period: 3m
+      interval: 30s
+      timeout: 10s
+      retries: 10
+    labels:
+      traefik.enable: 'true'
+      traefik.docker.network: web
+      traefik.http.routers.paperless.rule: Host(`paperless.${DOMAIN}`)
+      traefik.http.routers.paperless.entrypoints: websecure
+      traefik.http.routers.paperless.tls: 'true'
+      traefik.http.routers.paperless.tls.certresolver: letsencrypt
+      traefik.http.routers.paperless.service: paperless
+      traefik.http.services.paperless.loadbalancer.server.port: '8000'
+      traefik.http.routers.paperless.middlewares: authentik@docker
+      traefik.http.routers.authentik-outpost-paperless.rule: Host(`paperless.${DOMAIN}`) && PathPrefix(`/outpost.goauthentik.io/`)
+      traefik.http.routers.authentik-outpost-paperless.entrypoints: websecure
+      traefik.http.routers.authentik-outpost-paperless.tls: 'true'
+      traefik.http.routers.authentik-outpost-paperless.tls.certresolver: letsencrypt
+      traefik.http.routers.authentik-outpost-paperless.priority: '1000'
+      traefik.http.routers.authentik-outpost-paperless.service: authentik@docker
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: '3'
+    group_add:
+    - '60001'
+  paperless-postgresql:
+    image: postgres:${POSTGRES_VERSION}
+    container_name: paperless-postgresql
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${PAPERLESS_DB_NAME}
+      POSTGRES_USER: ${PAPERLESS_DB_USER}
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgresql_password
+    secrets:
+    - postgresql_password
+    volumes:
+    - paperless_postgresql_data:/var/lib/postgresql
+    networks:
+    - paperless_internal
+    healthcheck:
+      test:
+      - CMD-SHELL
+      - pg_isready -d "$${POSTGRES_DB}" -U "$${POSTGRES_USER}"
+      start_period: 30s
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: '3'
+    group_add:
+    - '60001'
+  paperless-valkey:
+    image: valkey/valkey:${VALKEY_VERSION}
+    container_name: paperless-valkey
+    restart: unless-stopped
+    command: valkey-server --appendonly yes
+    volumes:
+    - paperless_valkey_data:/data
+    networks:
+    - paperless_internal
+    healthcheck:
+      test:
+      - CMD
+      - valkey-cli
+      - ping
+      start_period: 10s
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    logging:
+      driver: json-file
+      options:
+        max-size: 5m
+        max-file: '3'
+networks:
+  web:
+    external: true
+    name: web
+  paperless_internal:
+    name: paperless_internal
+    internal: true
+volumes:
+  paperless_data:
+    name: managed_paperless_data
+  paperless_media:
+    name: managed_paperless_media
+  paperless_consume:
+    name: managed_paperless_consume
+  paperless_export:
+    name: managed_paperless_export
+  paperless_postgresql_data:
+    name: managed_paperless_postgresql_data
+  paperless_valkey_data:
+    name: managed_paperless_valkey_data
+secrets:
+  postgresql_password:
+    file: ./secrets/postgresql_password
+  paperless_secret_key:
+    file: ./secrets/paperless_secret_key
+  paperless_admin_password:
+    file: ./secrets/paperless_admin_password
+  paperless_socialaccount_providers:
+    file: ./secrets/paperless_socialaccount_providers
