@@ -1,0 +1,79 @@
+services:
+  localai:
+    image: localai/localai:${LOCALAI_VERSION}
+    container_name: localai
+    restart: unless-stopped
+    security_opt:
+    - no-new-privileges:true
+    environment:
+      TZ: Europe/Berlin
+      LOCALAI_CONTEXT_SIZE: '4096'
+      LOCALAI_AUTH: 'true'
+      LOCALAI_DISABLE_LOCAL_AUTH: 'true'
+      LOCALAI_REGISTRATION_MODE: open
+      LOCALAI_BASE_URL: https://localai.${DOMAIN}
+      LOCALAI_OIDC_ISSUER: https://auth.${DOMAIN}/application/o/localai/
+      LOCALAI_OIDC_CLIENT_ID: localai
+      LOCALAI_ADMIN_EMAIL: ${LOCALAI_ADMIN_EMAIL}
+    entrypoint:
+    - /bin/sh
+    - -ec
+    command:
+    - export LOCALAI_OIDC_CLIENT_SECRET="$$(cat /run/secrets/localai_oidc_client_secret)" LOCALAI_THREADS="$$(nproc)"; exec
+      /entrypoint.sh
+    secrets:
+    - localai_oidc_client_secret
+    volumes:
+    - localai_models:/models
+    - localai_data:/data
+    - localai_configuration:/configuration
+    - localai_backends:/backends
+    expose:
+    - '8080'
+    networks:
+    - web
+    healthcheck:
+      test:
+      - CMD-SHELL
+      - curl --fail --silent http://localhost:8080/readyz >/dev/null
+      start_period: 90s
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    labels:
+      traefik.enable: 'true'
+      traefik.docker.network: web
+      traefik.http.routers.localai.rule: Host(`localai.${DOMAIN}`)
+      traefik.http.routers.localai.entrypoints: websecure
+      traefik.http.routers.localai.tls: 'true'
+      traefik.http.routers.localai.tls.certresolver: letsencrypt
+      traefik.http.routers.localai.service: localai
+      traefik.http.services.localai.loadbalancer.server.port: '8080'
+      traefik.http.routers.localai.middlewares: authentik@docker
+      traefik.http.routers.authentik-outpost-localai.rule: Host(`localai.${DOMAIN}`) && PathPrefix(`/outpost.goauthentik.io/`)
+      traefik.http.routers.authentik-outpost-localai.entrypoints: websecure
+      traefik.http.routers.authentik-outpost-localai.tls: 'true'
+      traefik.http.routers.authentik-outpost-localai.tls.certresolver: letsencrypt
+      traefik.http.routers.authentik-outpost-localai.priority: '1000'
+      traefik.http.routers.authentik-outpost-localai.service: authentik@docker
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: '3'
+networks:
+  web:
+    external: true
+    name: web
+volumes:
+  localai_models:
+    name: managed_localai_models
+  localai_data:
+    name: managed_localai_data
+  localai_configuration:
+    name: managed_localai_configuration
+  localai_backends:
+    name: managed_localai_backends
+secrets:
+  localai_oidc_client_secret:
+    file: ./secrets/localai_oidc_client_secret
