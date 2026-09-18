@@ -200,8 +200,9 @@ class Configuration:
             raise ManagerError('Noch nicht erfasste Werte: ' + ', '.join(sorted(missing)))
         output = {}
         secrets = {}
+        existing_env = {n: read_env(stack.path / '.env') for n, stack in self.stacks.items()}
         for e in self.entries:
-            value = self.values[e.key] if e.key else e.literal
+            value = self.values[e.key] if e.key else existing_env[e.stack].get(e.variable, e.literal)
             if e.mode == '-':
                 for target in e.targets:
                     path = secret_path(self.stacks[e.stack], target)

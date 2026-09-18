@@ -61,14 +61,31 @@ def edit_config(context):
     for entry in entries:
         if entry.mode == '!' and changed.get(entry.variable) != previous.get(entry.variable):
             raise ManagerError('Passwortänderung benötigt die passende Änderung im laufenden Dienst; nicht nur die ENV-Datei ändern.')
-        if entry.key and '.' in entry.key and not entry.key.startswith(name + '.') and changed.get(entry.variable) != previous.get(entry.variable):
-            raise ManagerError('Stackübergreifende Werte müssen in allen beteiligten Konfigurationen konsistent geändert werden.')
-    private_write(path, result)
+    originals = {path: old}
+    updates = {path: result}
+    shared = {e.key: changed[e.variable] for e in entries if e.key and e.mode != '-'
+              and e.variable in changed and changed[e.variable] != previous.get(e.variable)}
+    from .config import encode
+    for other in context.stacks.values():
+        other_path = other.path / '.env'
+        if other_path == path or not other_path.exists():
+            continue
+        values = read_env(other_path)
+        dirty = False
+        for entry in parse(other.name, (other.path / '.env.example').read_text()):
+            if entry.key in shared and entry.mode != '-':
+                if entry.mode == '!':
+                    raise ManagerError('Ein gemeinsam verwendetes Geheimnis darf nicht als normale ENV-Änderung rotiert werden.')
+                values[entry.variable] = shared[entry.key]; dirty = True
+        if dirty:
+            originals[other_path] = other_path.read_text()
+            updates[other_path] = '\n'.join(k + '=' + encode(v) for k,v in values.items()) + '\n'
     try:
+        for dest, content in updates.items(): private_write(dest, content)
         context.check_templates()
-        context.docker.compose(name, 'config', '--quiet')
+        for dest in updates: context.docker.compose(dest.parent.name, 'config', '--quiet')
     except Exception:
-        private_write(path, old)
+        for dest, content in originals.items(): private_write(dest, content)
         raise
     print(f'{name}: Konfiguration gespeichert; Container werden neu erstellt.')
     context.initialize(context.state.data['selected'])
@@ -139,8 +156,8 @@ def backup_menu(context):
             with TemporaryDirectory() as folder:
                 plain = Path(folder) / 'import.tar.gz'
                 run(['age', '-d', '-i', str(identity), '-o', str(plain), str(path)])
-                _import(plain, mounts)
-        else: _import(path, mounts)
+                _import(plain, mounts, context.stacks[name].path)
+        else: _import(path, mounts, context.stacks[name].path)
         return
     config = yes_no_dialog(title='Konfiguration', text='ENV und Secrets zusätzlich verschlüsselt mitsichern?').run()
     recipient = input('age-Empfänger (age1…): ').strip() if config else None
@@ -158,11 +175,14 @@ def backup_menu(context):
         print('Zeitplan gespeichert. Für unbeaufsichtigte Ausführung den Timer über das Backup-Menü installieren.')
 
 
-def _import(path, mounts):
+def _import(path, mounts, stack_path):
     manifest = inspect_archive(path)
     targets = {}
     for i, item in enumerate(manifest['mounts']):
-        dest = choose(f'Archiv-Mount {item["target"]}: Ziel wählen', [('', 'Überspringen'), *[(m.source, m.target) for m in mounts]])
+        options = [(m.source, m.target) for m in mounts]
+        if item.get('kind') == 'configuration' and item.get('target') in ('.env', 'secrets'):
+            options = [(str(stack_path / item['target']), 'Stack-Konfiguration: ' + item['target'])]
+        dest = choose(f'Archiv-Mount {item["target"]}: Ziel wählen', [('', 'Überspringen'), *options])
         if dest: targets[i] = dest
     if targets and yes_no_dialog(title='Zieldaten ersetzen', text='Alle vorhandenen Daten in den gewählten Mounts ersetzen?\n' + '\n'.join(targets.values())).run():
         import_archive(path, targets, replace=True)
