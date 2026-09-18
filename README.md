@@ -30,6 +30,12 @@ Neue Volumes tragen das Präfix `managed_`; alte Volumes werden nicht automatisc
 Installation überschneiden. Alte Stacks vor einer neuen Installation geordnet
 stoppen; **keine Volumes löschen**.
 
+## Kurze Dienstedokumentation
+
+[Alle 19 Dienste auf einen Blick](docs/dienste.md): pro Stack eine Seite zu Zweck,
+Nutzung, Einstellungen, Daten und häufigen Problemen. Zusatzdienste sind jeweils
+in der Stack-Seite erklärt.
+
 ## Erweiterung
 
 Ein neuer Ordner `compose/<name>/` enthält:

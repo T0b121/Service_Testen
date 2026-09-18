@@ -53,4 +53,6 @@ sudo .venv/bin/python compose/manage.py stop
 sudo .venv/bin/python compose/manage.py backup-tick
 ```
 
+Die [kompakten Diensteseiten](docs/dienste.md) erklären die einzelnen Anwendungen.
+
 Vor produktiver Nutzung die [Betriebsprüfungen](docs/validierung.md) durchführen.
