@@ -104,3 +104,6 @@ Teilweise fehlgeschlagene Initialisierung bleibt als ausstehend markiert. Ein Im
 mehrerer Mounts ist keine Dateisystemtransaktion über mehrere Datenträger: bei einem
 späten Fehler nennt der Manager die bereits ersetzten Ziele. Vorhandene Daten des
 aktuell bearbeiteten Verzeichnisses werden während des Austauschs lokal vorgehalten.
+
+Nach einem Fehler während der Wiederherstellung bleiben betroffene Container
+gestoppt. Die genannten Importziele prüfen, bevor Dienste wieder gestartet werden.

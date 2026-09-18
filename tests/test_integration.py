@@ -62,3 +62,28 @@ class RoundTrip(unittest.TestCase):
             p=Path(folder); source=p/'source';source.mkdir()
             with self.assertRaises(ManagerError):
                 export_archive(p/'out.tar.gz','x','x',[Mount(str(source),'/data','bind')],config=p)
+
+class BackupFailure(unittest.TestCase):
+    @patch('_manager.backup.run')
+    @patch('_manager.backup.users_of_mounts', return_value=['container'])
+    def test_failed_restore_does_not_restart_containers(self, users, run):
+        from _manager.backup import quiesce
+        with self.assertRaises(RuntimeError):
+            with quiesce([], restart_on_error=False):
+                raise RuntimeError('restore failed')
+        self.assertEqual([c.args[0][1] for c in run.call_args_list], ['stop'])
+
+    def test_failed_scheduled_backup_preserves_previous_archive(self):
+        from types import SimpleNamespace
+        from _manager.scheduler import tick
+        with tempfile.TemporaryDirectory() as folder:
+            root=Path(folder); path=root/'_backup'/'s'/'v';path.mkdir(parents=True)
+            (path/'old.tar.gz').write_text('existing backup')
+            job={'id':'abc','stack':'s','service':'v','targets':['/data'],'cron':'0 3 * * *',
+                 'timezone':'UTC','keep':1,'next':'2020-01-01T00:00:00+00:00','archives':['old.tar.gz']}
+            context=SimpleNamespace(root=root,state=SimpleNamespace(data={'backups':[job]},save=lambda:None),docker=None)
+            with patch('_manager.scheduler.inventory', return_value=[Mount('/fake','/data','bind')]), patch('_manager.scheduler.export_archive', side_effect=ManagerError('failure')):
+                with self.assertRaises(ManagerError):tick(context)
+            self.assertTrue((path/'old.tar.gz').exists())
+            self.assertEqual(job['archives'],['old.tar.gz'])
+            self.assertIn('error',job)

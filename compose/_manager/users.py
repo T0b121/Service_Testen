@@ -74,6 +74,10 @@ class Users:
                 self.state.data['pending'][key] = entry
             self.state.save()
 
+        pending = [key.rsplit(':', 1)[1] for key in self.state.data['pending'] if key.startswith(f'user:{user["pk"]}:')]
+        if pending:
+            print('Lokale Nutzerverwaltung/Sitzungen noch zu prüfen: ' + ', '.join(pending))
+
     def retry(self):
         for key, entry in list(self.state.data['pending'].items()):
             if not key.startswith('user:') or not isinstance(entry, dict):

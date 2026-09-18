@@ -46,6 +46,7 @@ def add_job(state, stack, service, targets, expression, zone, keep, config=False
 
 def tick(context):
     now = datetime.now(timezone.utc)
+    failures = []
     for job in context.state.data['backups']:
         if datetime.fromisoformat(job['next']) > now:
             continue
@@ -71,10 +72,13 @@ def tick(context):
             job['last_success'] = now.isoformat(); job.pop('error', None)
         except (ManagerError, OSError) as error:
             job['error'] = str(error)
+            failures.append(job['stack'] + '/' + job['service'])
         finally:
             # Keine endlosen Wiederholungen desselben fehlgeschlagenen Termins.
             job['next'] = next_run(job['cron'], job['timezone'], now).isoformat()
             context.state.save()
+    if failures:
+        raise ManagerError('Backup fehlgeschlagen: ' + ', '.join(failures) + '. Details im Status.')
 
 
 def install_timer(root):

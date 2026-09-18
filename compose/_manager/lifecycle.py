@@ -48,6 +48,7 @@ class Context:
         self.docker.start(['core'])
         finish_bootstrap(self.stacks['core'], self.state, self.auth)
         for name in selected:
+            print(f'Einrichtung: {name}')
             key = 'setup:' + name
             self.state.data['pending'][key] = 'Einrichtung noch nicht vollständig.'
             self.state.save()

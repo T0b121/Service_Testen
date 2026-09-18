@@ -75,15 +75,18 @@ def users_of_mounts(mounts):
 
 
 @contextmanager
-def quiesce(mounts):
+def quiesce(mounts, *, restart_on_error=True):
     running = users_of_mounts(mounts)
+    entered = success = False
     try:
         if running:
             run(['docker', 'stop', '--time', '120', *running], timeout=300)
+        entered = True
         yield
+        success = True
     finally:
         # Auch bei teilweise fehlgeschlagenem Stop die zuvor laufenden Dienste starten.
-        if running:
+        if running and (success or restart_on_error or not entered):
             run(['docker', 'start', *running], timeout=300)
 
 
@@ -218,7 +221,7 @@ def import_archive(archive_path, targets, *, identity=None, replace=False):
         # Extraktion in frische temporäre Verzeichnisse, nie direkt in vorhandene Links.
         stages, completed = [], []
         try:
-            with quiesce(mounts), tarfile.open(path, 'r:gz') as archive:
+            with quiesce(mounts, restart_on_error=False), tarfile.open(path, 'r:gz') as archive:
                 for index, target in targets.items():
                     target = Path(target)
                     if target.is_symlink():
@@ -259,8 +262,8 @@ def import_archive(archive_path, targets, *, identity=None, replace=False):
                     completed.append(str(target))
         except BaseException as error:
             if completed:
-                raise ManagerError('Import nach Teilwiederherstellung abgebrochen. Bereits ersetzt: ' + ', '.join(completed)) from error
-            raise
+                raise ManagerError('Import nach Teilwiederherstellung abgebrochen; betroffene Dienste bleiben gestoppt. Bereits ersetzt: ' + ', '.join(completed)) from error
+            raise ManagerError('Import fehlgeschlagen; betroffene Dienste bleiben zur Prüfung gestoppt.') from error
         finally:
             for stage in stages:
                 shutil.rmtree(stage, ignore_errors=True)
