@@ -19,3 +19,15 @@ class Archives(unittest.TestCase):
             with self.assertRaises(ManagerError):inspect_archive(self.make(name,link))
     def test_regular_archive(self):
         self.assertEqual(inspect_archive(self.make('data/0/test'))['version'],1)
+
+class Schedules(unittest.TestCase):
+    def test_timezone_and_retention_config(self):
+        try:
+            import croniter
+        except ImportError:
+            self.skipTest('croniter nicht installiert')
+        from datetime import datetime, timezone
+        from _manager.scheduler import next_run
+        result=next_run('0 3 * * *', 'Europe/Berlin', datetime(2026,1,1,tzinfo=timezone.utc))
+        self.assertEqual(result.hour, 2)
+        with self.assertRaises(ManagerError):next_run('* * * * * *','UTC')
