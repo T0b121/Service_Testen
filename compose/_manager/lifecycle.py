@@ -36,6 +36,10 @@ class Context:
         ensure_secret_group()
         print('Einrichtungsreihenfolge: ' + ' → '.join(selected))
         cfg = Configuration(self.stacks, selected)
+        for name in selected:
+            hook = getattr(self.stacks[name].module, 'configure', None)
+            if hook:
+                hook(self, cfg)
         cfg.collect()
         domain = cfg.values.get('global.DOMAIN', '')
         if not re.fullmatch(r'(?=.{1,253}$)[A-Za-z0-9](?:[A-Za-z0-9.-]*[A-Za-z0-9])?', domain) or '.' not in domain:
