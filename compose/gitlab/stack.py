@@ -15,3 +15,27 @@ def after_start(context):
         'ApplicationSetting.current.update!(signup_enabled: false)')
 
 START_TIMEOUT = 1500
+
+
+def sync_user(context, action, user):
+    # Bestehende SSO-Konten werden anhand ihres stabilen OIDC-sub zugeordnet.
+    # JIT-Kontoanlage erfolgt weiter beim ersten Login; Löschung sperrt lokale
+    # Konten, damit Projekte und Beiträge erhalten bleiben.
+    import json
+    groups = {g['pk']: g['name'] for g in context.auth.items('core/groups/')}
+    names = {groups[g] for g in user.get('groups', []) if g in groups}
+    payload = dict(user, action=action, allowed=bool(names & set(AUTH_GROUPS)), admin='gitlab-admins' in names)
+    script = '''require 'json'
+p = JSON.parse(STDIN.read)
+u = User.find_by(username: p['username'])
+if u
+  if p['action'] == 'delete' || !p['is_active'] || !p['allowed']
+    u.block! unless u.blocked?
+  else
+    u.update!(name: p['name'], email: p['email'], admin: p['admin'])
+    u.activate! if u.blocked?
+  end
+end
+'''
+    # stdin contains data; Ruby source itself is fixed, never user interpolation.
+    context.docker.exec('gitlab', 'gitlab', 'gitlab-rails', 'runner', script, input=json.dumps(payload))
